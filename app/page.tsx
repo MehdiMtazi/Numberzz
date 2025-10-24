@@ -450,6 +450,65 @@ export default function Home() {
 	// Nouveau: Balance BASE
 	const [baseBalance, setBaseBalance] = useState<string>("0");
 
+	// Écouter les changements de compte MetaMask
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		const eth = (window as any).ethereum;
+		if (!eth) return;
+
+		const handleAccountsChanged = async (accounts: string[]) => {
+			if (accounts.length === 0) {
+				// L'utilisateur a déconnecté tous les comptes
+				setAccount(null);
+				setNetworkCorrect(false);
+				setCurrentChainId(null);
+				setBaseBalance("0");
+			} else if (accounts[0] !== account) {
+				// L'utilisateur a changé de compte
+				setAccount(accounts[0]);
+				
+				// Récupérer la balance du nouveau compte
+				try {
+					const balanceHex = await eth.request({ method: "eth_getBalance", params: [accounts[0], "latest"] });
+					const parsed = parseInt(balanceHex, 16);
+					if (!Number.isNaN(parsed)) {
+						setBaseBalance((parsed / 1e18).toFixed(4));
+					}
+				} catch (err) {
+					console.warn("Erreur lors de la récupération de la balance:", err);
+				}
+
+				// Vérifier le réseau du nouveau compte
+				try {
+					const chain = await eth.request({ method: "eth_chainId" });
+					setCurrentChainId(chain);
+					setNetworkCorrect(chain === "0x2105"); // Base mainnet
+				} catch (err) {
+					console.warn("Erreur lors de la vérification du réseau:", err);
+				}
+			}
+		};
+
+		const handleChainChanged = (chainId: string) => {
+			setCurrentChainId(chainId);
+			setNetworkCorrect(chainId === "0x2105");
+			// Rafraîchir la page pour éviter les états inconsistants (recommandé par MetaMask)
+			window.location.reload();
+		};
+
+		// Ajouter les listeners
+		eth.on("accountsChanged", handleAccountsChanged);
+		eth.on("chainChanged", handleChainChanged);
+
+		// Cleanup
+		return () => {
+			if (eth.removeListener) {
+				eth.removeListener("accountsChanged", handleAccountsChanged);
+				eth.removeListener("chainChanged", handleChainChanged);
+			}
+		};
+	}, [account]);
+
 	// fermer modal avec Escape
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
