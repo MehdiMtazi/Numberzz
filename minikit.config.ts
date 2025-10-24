@@ -10,9 +10,9 @@ const ROOT_URL =
  */
 export const minikitConfig = {
   accountAssociation: {
-    header: "",
-    payload: "",
-    signature: "",
+    "header": "eyJmaWQiOjEzOTczNjQsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhFQzc5YzYzRUUyMTI5NUE3ODJiMzllQ2ZGY0M2ZDE3MzZmZjU2YjZhIn0",
+    "payload": "eyJkb21haW4iOiJudW1iZXJ6ei52ZXJjZWwuYXBwIn0",
+    "signature": "If/4EIB/avc5nKK3sYNAu5/Q3gStQA2eZF7eMjwek5EPTv3rEUiloKdZG+CTsjDTJ3KTeRkqOZjYoBooZsG+wRw="
   },
   baseBuilder: {
     allowedAddresses: ["0x4fF5b9d86977890c3dDc913Ff8e289B69e64301C"],
@@ -20,8 +20,8 @@ export const minikitConfig = {
   miniapp: {
     version: "1",
     name: "Numberzz",
-    subtitle: "Collect & Trade Unique Numbers",
-    description: "Numberzz is a unique NFT collection on Base where you can collect, trade, and own numbers from 0 to infinity. Each number is a rare digital asset with its own rarity tier. Discover hidden easter eggs, unlock achievements, and become part of an exclusive community of number collectors.",
+    subtitle: "Collect and Trade Numbers",
+    description: "Numberzz: Unique NFT numbers on Base. Each token tells a story. Collect and discover the significance behind every digit in this digital collectible experience.",
     screenshotUrls: [
       `${ROOT_URL}/screenshot1.png`,
       `${ROOT_URL}/screenshot2.png`,
@@ -33,10 +33,10 @@ export const minikitConfig = {
     homeUrl: ROOT_URL,
     webhookUrl: `${ROOT_URL}/api/webhook`,
     primaryCategory: "utility",
-    tags: ["nft", "collectibles", "base", "numbers", "trading", "easter-eggs"],
+  tags: ["numbers", "nft", "collectibles", "math", "trading"],
     heroImageUrl: `${ROOT_URL}/hero.png`,
     tagline: "Every Number Tells a Story",
-    ogTitle: "Numberzz - Collect Unique Numbers on Base",
+    ogTitle: "Numberzz: Collect Numbers",
     ogDescription: "Join the Numberzz community and start collecting unique numbers today!",
     ogImageUrl: `${ROOT_URL}/hero.png`,
     "noindex": true

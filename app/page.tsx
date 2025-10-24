@@ -107,8 +107,17 @@ const useCrossTabSync = () => {
 
 export default function Home() {
 	useEffect(() => {
-        sdk.actions.ready();
-    }, []);
+		// Guarder l'appel au SDK de la mini app: certains environnements (dev navigateur
+		// hors mini app) n'exposent pas les actions et cela peut lancer des erreurs.
+		try {
+			if (sdk && sdk.actions && typeof sdk.actions.ready === 'function') {
+				sdk.actions.ready();
+			}
+		} catch (err) {
+			// Ne pas casser l'UI si le SDK n'est pas disponible
+			console.warn('miniapp sdk.actions.ready() failed or not available', err);
+		}
+	}, []);
 	// Éviter les erreurs d'hydratation SSR/Client
 	const hydrated = useHydrated();
 	
@@ -1333,7 +1342,9 @@ export default function Home() {
 						opacity: searchOpen ? 0.7 : 1
 					}}
 				>
-					<div className="lux-logo-icon">№</div>
+					<div className="lux-logo-icon">
+						<img src="/icon.png" alt="Numberzz" style={{width: '100%', height: '100%', borderRadius: '6px'}} />
+					</div>
 					<div className="lux-logo-text" style={{display: searchOpen ? 'none' : 'block'}}>
 						<h1>Numberz</h1>
 						<span>NFT COLLECTION</span>
