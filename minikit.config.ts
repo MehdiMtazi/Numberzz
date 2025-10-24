@@ -1,5 +1,8 @@
+// Canonical public URL of the app. Set NEXT_PUBLIC_URL in Vercel to override if needed.
+const CANONICAL_URL = "https://numberzz.vercel.app";
 const ROOT_URL =
   process.env.NEXT_PUBLIC_URL ||
+  CANONICAL_URL ||
   (process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`) ||
   "http://localhost:3000";
 

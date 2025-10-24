@@ -172,6 +172,9 @@ export default function Home() {
 	const [logoClickCount, setLogoClickCount] = useState<number>(0);
 	const [searchIconClickCount, setSearchIconClickCount] = useState<number>(0);
 	
+	// Menu mobile pour mini app
+	const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+	
 	// Filtres
 	const [filterType, setFilterType] = useState<"all" | "available" | "ownedByMe" | "ownedByOthers" | "forSale">("all");
 	const [sortBy, setSortBy] = useState<"none" | "priceAsc" | "priceDesc" | "rarity" | "mostInterested">("none");
@@ -1330,7 +1333,11 @@ export default function Home() {
 
 		{/* Navigation */}
 		<nav className="lux-nav">
-			<div className="lux-nav-content" style={{transition: 'all 0.3s ease'}}>
+			<div className="lux-nav-content" style={{
+				transition: 'all 0.3s ease',
+				flexWrap: 'wrap',
+				gap: '0.75rem'
+			}}>
 				{/* Logo */}
 				<div 
 					className="lux-logo" 
@@ -1339,7 +1346,8 @@ export default function Home() {
 						transition: 'all 0.3s ease',
 						transform: searchOpen ? 'scale(0.75)' : 'scale(1)',
 						transformOrigin: 'left center',
-						opacity: searchOpen ? 0.7 : 1
+						opacity: searchOpen ? 0.7 : 1,
+						minWidth: 'fit-content'
 					}}
 				>
 					<div className="lux-logo-icon">
@@ -1352,7 +1360,7 @@ export default function Home() {
 				</div>
 
 				{/* Search - Collapsible */}
-				<div className="lux-search" style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
+				<div className="lux-search" style={{position: 'relative', display: 'flex', alignItems: 'center', flex: searchOpen ? '1' : 'initial'}}>
 					{searchOpen ? (
 						<>
 							<input
@@ -1376,7 +1384,8 @@ export default function Home() {
 								className="lux-search-input"
 								autoFocus
 								style={{
-									width: '320px',
+									width: '100%',
+									minWidth: '200px',
 									transition: 'width 0.3s ease',
 								}}
 							/>
@@ -1433,13 +1442,43 @@ export default function Home() {
 							</svg>
 						</button>
 					)}
-				</div>				{/* Wallet */}
+				</div>
+
+				{/* Spacer pour pousser les boutons à droite sur desktop */}
+				<div style={{flex: 1, minWidth: '20px', display: searchOpen ? 'none' : 'block'}} />
+
+				{/* Mobile Menu Button (visible uniquement sur petit écran) */}
+				<button 
+					onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+					style={{
+						display: 'none', // Sera visible via media query en CSS
+						background: 'rgba(255,255,255,0.05)',
+						border: '1px solid rgba(255,255,255,0.1)',
+						borderRadius: '0.75rem',
+						padding: '0.75rem',
+						cursor: 'pointer',
+						color: 'rgba(255,255,255,0.7)',
+						transition: 'all 0.2s'
+					}}
+					className="mobile-menu-btn"
+				>
+					<svg style={{width: '24px', height: '24px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						{mobileMenuOpen ? (
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+						) : (
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+						)}
+					</svg>
+				</button>
+
+				{/* Wallet - Desktop view */}
 				<div 
-					className="lux-wallet"
+					className="lux-wallet lux-wallet-desktop"
 					style={{
 						transition: 'all 0.3s ease',
-						gap: searchOpen ? '0.4rem' : '0.75rem',
-						flexWrap: searchOpen ? 'wrap' : 'nowrap'
+						gap: '0.5rem',
+						flexWrap: 'wrap',
+						alignItems: 'center'
 					}}
 				>
 					{account && (
@@ -1448,7 +1487,8 @@ export default function Home() {
 								className="lux-wallet-badge"
 								style={{
 									transition: 'all 0.3s ease',
-									fontSize: searchOpen ? '0.75rem' : '0.875rem'
+									fontSize: '0.75rem',
+									whiteSpace: 'nowrap'
 								}}
 								title={networkCorrect ? "✅ Connected to Base Mainnet (Chain ID: 8453)" : "⚠️ Wrong network - Please switch to Base Mainnet"}
 							>
@@ -1456,16 +1496,17 @@ export default function Home() {
 								<span>{account.slice(0, 6)}...{account.slice(-4)}</span>
 							</div>
 							<div style={{
-								fontSize: searchOpen ? '0.65rem' : '0.75rem', 
+								fontSize: '0.7rem', 
 								color: 'rgba(255,255,255,0.6)', 
-								display: searchOpen ? 'none' : 'flex', 
+								display: 'flex', 
 								alignItems: 'center', 
 								gap: '0.4rem', 
 								padding: '0.4rem 0.7rem', 
 								background: 'rgba(255,255,255,0.05)', 
 								border: '1px solid rgba(255,255,255,0.1)', 
 								borderRadius: '6px',
-								transition: 'all 0.3s ease'
+								transition: 'all 0.3s ease',
+								whiteSpace: 'nowrap'
 							}}>
 								<svg style={{width: '0.8rem', height: '0.8rem'}} fill="currentColor" viewBox="0 0 20 20">
 									<path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -1475,15 +1516,15 @@ export default function Home() {
 							<button 
 								onClick={() => document.querySelector('.lux-hero')?.scrollIntoView({ behavior: 'smooth' })}
 								style={{
-									padding: searchOpen ? '0.5rem 0.75rem' : '0.6rem 1rem', 
-									fontSize: searchOpen ? '0.75rem' : '0.85rem', 
+									padding: '0.5rem 0.75rem', 
+									fontSize: '0.75rem', 
 									background: 'rgba(255,255,255,0.08)', 
 									border: '1px solid rgba(255,255,255,0.1)', 
 									borderRadius: '6px', 
 									color: 'white', 
 									cursor: 'pointer', 
 									transition: 'all 0.3s ease',
-									display: searchOpen ? 'none' : 'block'
+									whiteSpace: 'nowrap'
 								}}
 							>
 								My Numbers
@@ -1491,10 +1532,16 @@ export default function Home() {
 						</>
 					)}
 					{account && (
-						<a href="/easter-eggs" style={{display: searchOpen ? 'none' : 'inline-block', transition: 'all 0.3s ease'}}>
+						<a href="/easter-eggs" style={{textDecoration: 'none'}}>
 							<button 
 								className="lux-wallet-btn"
-								style={{background: 'rgba(236,72,153,0.2)', border: '1px solid rgba(236,72,153,0.4)'}}
+								style={{
+									background: 'rgba(236,72,153,0.2)', 
+									border: '1px solid rgba(236,72,153,0.4)',
+									fontSize: '0.75rem',
+									padding: '0.5rem 0.75rem',
+									whiteSpace: 'nowrap'
+								}}
 							>
 								🔮 Easter Eggs
 							</button>
@@ -1510,8 +1557,9 @@ export default function Home() {
 							style={{
 								background: 'rgba(168,85,247,0.2)', 
 								border: '1px solid rgba(168,85,247,0.4)',
-								display: searchOpen ? 'none' : 'flex',
-								transition: 'all 0.3s ease'
+								fontSize: '0.75rem',
+								padding: '0.5rem 0.75rem',
+								whiteSpace: 'nowrap'
 							}}
 						>
 							🏆 Achievements
@@ -1526,11 +1574,13 @@ export default function Home() {
 								border: clearConfirmationStep > 0 ? '1px solid rgba(220,38,38,0.6)' : '1px solid rgba(239,68,68,0.4)',
 								fontWeight: clearConfirmationStep > 0 ? 700 : 500,
 								transition: 'all 0.3s ease',
-								display: searchOpen ? 'none' : 'flex'
+								fontSize: '0.75rem',
+								padding: '0.5rem 0.75rem',
+								whiteSpace: 'nowrap'
 							}}
 						>
 							{clearConfirmationStep === 0 && "🗑️ Clear Data"}
-							{clearConfirmationStep === 1 && "⚠️ Confirm (click again)"}
+							{clearConfirmationStep === 1 && "⚠️ Confirm"}
 							{clearConfirmationStep === 2 && "Clearing..."}
 						</button>
 					)}
@@ -1539,14 +1589,183 @@ export default function Home() {
 						className="lux-wallet-btn"
 						style={{
 							transition: 'all 0.3s ease',
-							padding: searchOpen ? '0.5rem 0.75rem' : undefined,
-							fontSize: searchOpen ? '0.8rem' : undefined
+							fontSize: '0.75rem',
+							padding: '0.5rem 0.75rem',
+							whiteSpace: 'nowrap'
 						}}
 					>
 						{account ? "Disconnect" : "Connect"}
 					</button>
 				</div>
+
+				{/* Mobile Menu Dropdown */}
+				{mobileMenuOpen && (
+					<div 
+						className="lux-wallet-mobile"
+						style={{
+							width: '100%',
+							display: 'flex',
+							flexDirection: 'column',
+							gap: '0.5rem',
+							padding: '1rem',
+							background: 'rgba(0,0,0,0.8)',
+							borderRadius: '1rem',
+							border: '1px solid rgba(255,255,255,0.1)',
+							animation: 'slideDown 0.3s ease-out'
+						}}
+					>
+						{account && (
+							<>
+								<div 
+									className="lux-wallet-badge"
+									style={{
+										fontSize: '0.875rem',
+										justifyContent: 'center'
+									}}
+									title={networkCorrect ? "✅ Connected to Base Mainnet" : "⚠️ Wrong network"}
+								>
+									<div style={{width: '6px', height: '6px', borderRadius: '50%', backgroundColor: networkCorrect ? '#4ade80' : '#f87171'}} />
+									<span>{account.slice(0, 10)}...{account.slice(-8)}</span>
+								</div>
+								<div style={{
+									fontSize: '0.875rem', 
+									color: 'rgba(255,255,255,0.6)', 
+									display: 'flex', 
+									alignItems: 'center', 
+									justifyContent: 'center',
+									gap: '0.4rem', 
+									padding: '0.75rem', 
+									background: 'rgba(255,255,255,0.05)', 
+									border: '1px solid rgba(255,255,255,0.1)', 
+									borderRadius: '6px'
+								}}>
+									<svg style={{width: '1rem', height: '1rem'}} fill="currentColor" viewBox="0 0 20 20">
+										<path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+									</svg>
+									{baseBalance} BASE
+								</div>
+								<button 
+									onClick={() => {
+										document.querySelector('.lux-hero')?.scrollIntoView({ behavior: 'smooth' });
+										setMobileMenuOpen(false);
+									}}
+									style={{
+										width: '100%',
+										padding: '0.75rem', 
+										fontSize: '0.875rem', 
+										background: 'rgba(255,255,255,0.08)', 
+										border: '1px solid rgba(255,255,255,0.1)', 
+										borderRadius: '6px', 
+										color: 'white', 
+										cursor: 'pointer', 
+										transition: 'all 0.3s ease'
+									}}
+								>
+									My Numbers
+								</button>
+								<a href="/easter-eggs" style={{textDecoration: 'none', width: '100%'}}>
+									<button 
+										className="lux-wallet-btn"
+										style={{
+											width: '100%',
+											background: 'rgba(236,72,153,0.2)', 
+											border: '1px solid rgba(236,72,153,0.4)',
+											padding: '0.75rem',
+											fontSize: '0.875rem'
+										}}
+										onClick={() => setMobileMenuOpen(false)}
+									>
+										🔮 Easter Eggs
+									</button>
+								</a>
+								<button 
+									onClick={() => {
+										const unlockedCount = achievements.filter(a => a.unlocked).length;
+										alert(`🏆 Achievements: ${unlockedCount}/${achievements.length}\n\n${achievements.map(a => (a.unlocked ? "✅" : "🔒") + " " + a.name + "\n" + a.description).join("\n\n")}`);
+										setMobileMenuOpen(false);
+									}} 
+									className="lux-wallet-btn"
+									style={{
+										width: '100%',
+										background: 'rgba(168,85,247,0.2)', 
+										border: '1px solid rgba(168,85,247,0.4)',
+										padding: '0.75rem',
+										fontSize: '0.875rem'
+									}}
+								>
+									🏆 Achievements
+								</button>
+								{account?.toLowerCase() === bankWalletAddress.toLowerCase() && (
+									<button 
+										onClick={() => {
+											clearAllData();
+											setMobileMenuOpen(false);
+										}} 
+										className="lux-wallet-btn"
+										style={{
+											width: '100%',
+											background: clearConfirmationStep > 0 ? 'rgba(220,38,38,0.4)' : 'rgba(239,68,68,0.2)', 
+											border: clearConfirmationStep > 0 ? '1px solid rgba(220,38,38,0.6)' : '1px solid rgba(239,68,68,0.4)',
+											fontWeight: clearConfirmationStep > 0 ? 700 : 500,
+											padding: '0.75rem',
+											fontSize: '0.875rem'
+										}}
+									>
+										{clearConfirmationStep === 0 && "🗑️ Clear Data"}
+										{clearConfirmationStep === 1 && "⚠️ Confirm (click again)"}
+										{clearConfirmationStep === 2 && "Clearing..."}
+									</button>
+								)}
+							</>
+						)}
+						<button 
+							onClick={() => {
+								if (account) {
+									disconnectWallet();
+								} else {
+									connectWallet();
+								}
+								setMobileMenuOpen(false);
+							}} 
+							className="lux-wallet-btn"
+							style={{
+								width: '100%',
+								padding: '0.75rem',
+								fontSize: '0.875rem'
+							}}
+						>
+							{account ? "Disconnect Wallet" : "Connect Wallet"}
+						</button>
+					</div>
+				)}
 			</div>
+
+			{/* Add CSS for responsive behavior */}
+			<style jsx>{`
+				@media (max-width: 768px) {
+					.lux-wallet-desktop {
+						display: none !important;
+					}
+					.mobile-menu-btn {
+						display: flex !important;
+					}
+				}
+				@media (min-width: 769px) {
+					.lux-wallet-mobile {
+						display: none !important;
+					}
+				}
+				@keyframes slideDown {
+					from {
+						opacity: 0;
+						transform: translateY(-10px);
+					}
+					to {
+						opacity: 1;
+						transform: translateY(0);
+					}
+				}
+			`}</style>
 		</nav>			{/* Hero Section - Conditional Content */}
 			{account ? (
 				<section className="lux-hero" style={{minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
