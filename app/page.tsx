@@ -1,6 +1,7 @@
 "use client"
 // @ts-ignore - allow compilation when @types/react isn't resolved in the environment
 import { useEffect, useState, useRef } from "react";
+import { sdk } from '@farcaster/miniapp-sdk';
 
 // Hook pour éviter les erreurs d'hydratation SSR/Client
 const useHydrated = () => {
@@ -105,6 +106,9 @@ const useCrossTabSync = () => {
 };
 
 export default function Home() {
+	useEffect(() => {
+        sdk.actions.ready();
+    }, []);
 	// Éviter les erreurs d'hydratation SSR/Client
 	const hydrated = useHydrated();
 	
@@ -114,8 +118,9 @@ export default function Home() {
 	// Wallet & app state
 	const [account, setAccount] = useState<string | null>(null);
 	const [networkCorrect, setNetworkCorrect] = useState(false);
-	const bankWalletAddress = "0x5Fd31d2cED4Dd23233029677D785956B45145083"; // Adresse banque de l'app
-	const SEPOLIA_CHAIN_ID = "0xaa36a7"; // 11155111
+	const [currentChainId, setCurrentChainId] = useState<string | null>(null);
+	const bankWalletAddress = "0x53304048455325fBFFecC34a62976CB3f4D7b519"; // Adresse banque de l'app
+	const BASE_CHAIN_ID = "0x2105"; // Base mainnet (8453)
 
 	type NumItem = {
 		id: string;
@@ -123,6 +128,7 @@ export default function Home() {
 		rarity: "Legendary" | "Rare" | "Uncommon" | "Common" | "Exotic";
 		priceEth: string;
 		owner: string | null;
+		unlocked?: boolean; // pour les easter eggs: déverrouillé ou non
 		description?: string;
 		interestedCount?: number;
 		interestedBy?: string[];
@@ -144,6 +150,18 @@ export default function Home() {
 
 	// nouveau: recherche et génération automatique d'entiers naturels
 	const [query, setQuery] = useState<string>("");
+	const [searchOpen, setSearchOpen] = useState<boolean>(false);
+
+	// Pagination
+	const [currentPage, setCurrentPage] = useState<number>(1);
+	const itemsPerPage = 20;
+
+	// Scroll tracking pour le bouton flottant
+	const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
+
+	// Comptages pour actions nécessaires au déblocage des easter eggs
+	const [logoClickCount, setLogoClickCount] = useState<number>(0);
+	const [searchIconClickCount, setSearchIconClickCount] = useState<number>(0);
 	
 	// Filtres
 	const [filterType, setFilterType] = useState<"all" | "available" | "ownedByMe" | "ownedByOthers" | "forSale">("all");
@@ -247,15 +265,15 @@ export default function Home() {
 
 		// === EXOTIC (EASTER EGGS) ===
 		// FREE TO CLAIM (directement dans My Numbers)
-		{ id: "d_darius", label: "Ð", rarity: "Exotic", priceEth: "0", owner: null, description: "🗡️ Darius Coin - L'homme au bras de gigantotitan! Trouvé en cherchant 'darius'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "darius", isFreeToClaim: true },
-		{ id: "n_nyan", label: "🌈", rarity: "Exotic", priceEth: "0", owner: null, description: "� Nyan Cat Coin - Le chat arc-en-ciel légendaire! Trouvé en cherchant 'nyan'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "nyan", isFreeToClaim: true },
-		{ id: "c_chroma", label: "◆", rarity: "Exotic", priceEth: "0", owner: null, description: "🌈 Chroma Coin - Clique 7 fois sur le logo pour l'obtenir!", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "chroma", isFreeToClaim: true },
+		{ id: "d_darius", label: "Ð", rarity: "Exotic", priceEth: "0", owner: null, unlocked: false, description: "🗡️ Darius Coin - L'homme au bras de gigantotitan! Trouvé en cherchant 'darius'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "darius", isFreeToClaim: true },
+		{ id: "n_nyan", label: "🌈", rarity: "Exotic", priceEth: "0", owner: null, unlocked: false, description: "� Nyan Cat Coin - Le chat arc-en-ciel légendaire! Trouvé en cherchant 'nyan'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "nyan", isFreeToClaim: true },
+		{ id: "c_chroma", label: "◆", rarity: "Exotic", priceEth: "0", owner: null, unlocked: false, description: "🌈 Chroma Coin - Clique 7 fois sur le logo pour l'obtenir!", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "chroma", isFreeToClaim: true },
 
 		// PREMIUM (Disponibles à l'achat après déblocage)
-		{ id: "w_wukong", label: "☯", rarity: "Exotic", priceEth: "0.05", owner: null, description: "� Monkey King Coin - Le roi des singes! Débloqué en cherchant 'wukong', maintenant disponible à l'achat", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "wukong", isFreeToClaim: false },
-		{ id: "h_halflife", label: "½", rarity: "Exotic", priceEth: "0.048", owner: null, description: "� Half-Life Coin - Half-Life 3 confirmed? Débloqué en cherchant 'half-life'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "half-life", isFreeToClaim: false },
-		{ id: "m_meme", label: "🎲", rarity: "Exotic", priceEth: "0.042", owner: null, description: "Meme Coin - Incroyable! Débloqué en cherchant 'meme'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "meme", isFreeToClaim: false },
-		{ id: "s_secret", label: "🔐", rarity: "Exotic", priceEth: "0.035", owner: null, description: "Secret Coin - Mystérieux! Débloqué en appuyant 10 fois sur le bouton Search", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "secret", isFreeToClaim: false },
+		{ id: "w_wukong", label: "☯", rarity: "Exotic", priceEth: "0.05", owner: null, unlocked: false, description: "� Monkey King Coin - Le roi des singes! Débloqué en cherchant 'wukong', maintenant disponible à l'achat", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "wukong", isFreeToClaim: false },
+		{ id: "h_halflife", label: "½", rarity: "Exotic", priceEth: "0.048", owner: null, unlocked: false, description: "� Half-Life Coin - Half-Life 3 confirmed? Débloqué en cherchant 'half-life'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "half-life", isFreeToClaim: false },
+		{ id: "m_meme", label: "🎲", rarity: "Exotic", priceEth: "0.042", owner: null, unlocked: false, description: "Meme Coin - Incroyable! Débloqué en cherchant 'meme'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "meme", isFreeToClaim: false },
+		{ id: "s_secret", label: "🔐", rarity: "Exotic", priceEth: "0.035", owner: null, unlocked: false, description: "Secret Coin - Mystérieux! Débloqué en appuyant 10 fois sur le bouton Search", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "secret", isFreeToClaim: false },
 
 		...generateNaturals(2, 300),
 	];
@@ -417,8 +435,8 @@ export default function Home() {
 		}
 	}, [interestedByWithPrice]);
 
-	// Nouveau: Balance ETH
-	const [ethBalance, setEthBalance] = useState<string>("0");
+	// Nouveau: Balance BASE
+	const [baseBalance, setBaseBalance] = useState<string>("0");
 
 	// fermer modal avec Escape
 	useEffect(() => {
@@ -448,47 +466,87 @@ export default function Home() {
 	}, []);
 
 	const connectWallet = async () => {
+		if (typeof window === "undefined") return;
 		const eth = (window as any).ethereum;
-		if (!eth) {
-			alert("MetaMask non trouvé — installez une extension wallet.");
+		if (!eth || typeof eth.request !== "function") {
+			alert("MetaMask ou un provider Ethereum non détecté — installez une extension wallet.");
 			return;
 		}
+
 		try {
-			// Force le user à rechoisir son wallet en vidant les comptes cachés
-			await eth.request({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] });
-			
-			const accounts = await eth.request({ method: "eth_requestAccounts" });
-			setAccount(accounts[0]);
-			
-			// Récupérer la balance ETH
-			const balance = await eth.request({ 
-				method: "eth_getBalance", 
-				params: [accounts[0], "latest"] 
-			});
-			const balanceInEth = (parseInt(balance, 16) / 1e18).toFixed(4);
-			setEthBalance(balanceInEth);
-			
-			const chain = await eth.request({ method: "eth_chainId" });
-			if (chain !== SEPOLIA_CHAIN_ID) {
+			// Essayer d'obtenir les comptes directement (méthode la plus répandue)
+			let accounts: string[] | undefined;
+			try {
+				accounts = await eth.request({ method: "eth_requestAccounts" });
+			} catch (reqErr) {
+				// Certains wallets n'implémentent pas eth_requestAccounts de la même façon
+				// On essaie un fallback vers wallet_requestPermissions puis eth_accounts
 				try {
-					await eth.request({
-						method: "wallet_switchEthereumChain",
-						params: [{ chainId: SEPOLIA_CHAIN_ID }],
-					});
-					setNetworkCorrect(true);
-				} catch (switchErr) {
-					alert("Veuillez basculer manuellement votre wallet sur le réseau Sepolia.");
+					await eth.request({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] });
+					accounts = await eth.request({ method: "eth_accounts" });
+				} catch (permErr) {
+					// Si les deux échouent, remonter l'erreur
+					throw reqErr || permErr;
 				}
-			} else setNetworkCorrect(true);
-		} catch (err) {
-			console.error(err);
+			}
+
+			if (!accounts || accounts.length === 0) {
+				alert("Aucun compte détecté dans le wallet. Vérifiez votre extension/wallet et réessayez.");
+				return;
+			}
+
+			setAccount(accounts[0]);
+
+			// Récupérer la balance ETH (défensif si la réponse n'est pas la bonne)
+			let balanceHex: string | null = null;
+			try {
+				balanceHex = await eth.request({ method: "eth_getBalance", params: [accounts[0], "latest"] });
+			} catch (balErr) {
+				console.warn("Impossible de récupérer la balance via eth_getBalance:", balErr);
+			}
+			if (balanceHex) {
+				const parsed = parseInt(balanceHex, 16);
+				if (!Number.isNaN(parsed)) {
+					setBaseBalance((parsed / 1e18).toFixed(4));
+				}
+			}
+
+			// Vérifier le réseau
+			let chain: string | null = null;
+			try {
+				chain = await eth.request({ method: "eth_chainId" });
+				setCurrentChainId(chain); // Sauvegarder le chainId actuel
+			} catch (chainErr) {
+				console.warn("Impossible de récupérer eth_chainId:", chainErr);
+			}
+
+			if (chain && chain !== BASE_CHAIN_ID) {
+				try {
+					await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_ID }] });
+					setNetworkCorrect(true);
+					setCurrentChainId(BASE_CHAIN_ID);
+				} catch (switchErr) {
+					// Certains wallets refusent le switch programmatique — informer l'utilisateur
+					alert("Veuillez basculer manuellement votre wallet sur le réseau Base Mainnet.");
+				}
+			} else if (chain === BASE_CHAIN_ID) {
+				setNetworkCorrect(true);
+			} else {
+				// Si on n'a pas pu lire le chainId, on laisse networkCorrect à false mais pas bloquant
+				setNetworkCorrect(false);
+			}
+		} catch (err: any) {
+			console.error("Erreur lors de la connexion au wallet:", err);
+			// Montrer un message utilisateur plus clair
+			alert("Erreur de connexion au wallet: " + (err?.message || String(err)));
 		}
 	};
 
 	const disconnectWallet = () => {
 		setAccount(null);
 		setNetworkCorrect(false);
-		setEthBalance("0");
+		setCurrentChainId(null);
+		setBaseBalance("0");
 		// Forcer la reconnexion à la prochaine fois
 		localStorage.removeItem("walletConnected");
 	};
@@ -553,14 +611,19 @@ export default function Home() {
 	};
 
 	const buyNumber = async (item: NumItem) => {
+		// Empêcher l'achat d'un easter egg verrouillé
+		if (item.isEasterEgg && !item.unlocked) {
+			alert("Ce easter egg est verrouillé. Réalisez la condition requise pour le débloquer avant de l'acheter.");
+			return;
+		}
 		if (!account) {
 			await connectWallet();
 			if (!account) return;
 		}
-		if (!networkCorrect) {
-			alert("Connectez-vous au réseau Sepolia.");
-			return;
-		}
+			if (!networkCorrect) {
+				alert("Connectez-vous au réseau Base Mainnet.");
+				return;
+			}
 		
 		// Permettre l'achat si forSale OU si pas d'owner (disponible)
 		if (item.owner && !item.forSale) {
@@ -634,7 +697,7 @@ export default function Home() {
 			setNumbers((prev: NumItem[]) => prev.map((n: NumItem) => 
 				(n.id === item.id ? { ...n, forSale: true, salePrice: priceEth } : n)
 			));
-			alert(`✅ ${item.label} est maintenant en vente à ${priceEth} ETH!`);
+											alert(`✅ ${item.label} est maintenant en vente à ${priceEth} BASE!`);
 		}
 		
 		setSelectedSaleMode(null);
@@ -676,7 +739,7 @@ export default function Home() {
 
 		// Simuler la signature du smart contract
 		const confirmed = window.confirm(
-			`Confirmer la vente de ${numbers.find(n => n.id === contract.numId)?.label} pour ${buyerOffer?.priceEth || contract.priceEth} ETH?\n\nVous recevrez: ${(parseFloat(buyerOffer?.priceEth || contract.priceEth || "0") * 0.7).toFixed(4)} ETH (70% du prix)`
+			`Confirmer la vente de ${numbers.find(n => n.id === contract.numId)?.label} pour ${buyerOffer?.priceEth || contract.priceEth} BASE?\n\nVous recevrez: ${(parseFloat(buyerOffer?.priceEth || contract.priceEth || "0") * 0.7).toFixed(4)} BASE (70% du prix)`
 		);
 
 		if (!confirmed) return;
@@ -690,7 +753,7 @@ export default function Home() {
 		if (eth) {
 			try {
 				// Simuler la signature et l'appel au smart contract
-				console.log(`Demande de signature: réception de ${refundAmount} ETH du wallet banque pour la vente du ${numbers.find(n => n.id === contract.numId)?.label}`);
+				console.log(`Demande de signature: réception de ${refundAmount} BASE du wallet banque pour la vente du ${numbers.find(n => n.id === contract.numId)?.label}`);
 				
 				const smartContractData = {
 					action: "acceptSaleOffer",
@@ -704,11 +767,11 @@ export default function Home() {
 				console.log("Smart Contract Call:", JSON.stringify(smartContractData, null, 2));
 				
 				// Afficher une demande de signature
-				alert(`🔐 Veuillez signer la transaction via le smart contract...\n\nVous recevrez: ${refundAmount} ETH\n\nWallet Banque: ${bankWalletAddress}\nVotre adresse: ${account}`);
+				alert(`🔐 Veuillez signer la transaction via le smart contract...\n\nVous recevrez: ${refundAmount} BASE\n\nWallet Banque: ${bankWalletAddress}\nVotre adresse: ${account}`);
 				
 				// Simuler la signature et la confirmation
 				setTimeout(() => {
-					alert(`✅ Transaction confirmée par la banque!\n\n${refundAmount} ETH ont été transférés à votre adresse.\n\nTxHash: 0x${Math.random().toString(16).slice(2)}`);
+					alert(`✅ Transaction confirmée par la banque!\n\n${refundAmount} BASE ont été transférés à votre adresse.\n\nTxHash: 0x${Math.random().toString(16).slice(2)}`);
 				}, 1000);
 				
 			} catch (error) {
@@ -750,7 +813,7 @@ export default function Home() {
 		};
 		setCerts((c: Cert[]) => [cert, ...c]);
 
-		alert(`✅ Vente confirmée! ${buyer} est maintenant propriétaire.\n\nVous avez reçu ${refundAmount} ETH sur votre wallet depuis la banque.`);
+		alert(`✅ Vente confirmée! ${buyer} est maintenant propriétaire.\n\nVous avez reçu ${refundAmount} BASE sur votre wallet depuis la banque.`);
 	};
 
 	// --- Refuser/annuler le contrat de vente
@@ -792,7 +855,7 @@ export default function Home() {
 					: c
 			)
 		);
-		alert(`Offre de ${offerPrice} ETH soumise pour ${numbers.find(n => n.id === contract.numId)?.label}`);
+	alert(`Offre de ${offerPrice} BASE soumise pour ${numbers.find(n => n.id === contract.numId)?.label}`);
 	};
 
 	// --- Ajouter un intéressé avec prix
@@ -836,7 +899,7 @@ export default function Home() {
 			})
 		);
 
-		alert(`✅ Vous êtes intéressé à ${priceEth} ETH!`);
+	alert(`✅ Vous êtes intéressé à ${priceEth} BASE!`);
 	};
 
 	// --- Supprimer intérêt
@@ -961,6 +1024,25 @@ export default function Home() {
 		return filtered;
 	};
 
+	// Pagination: Obtenir seulement les items de la page actuelle
+	const getPaginatedNumbers = () => {
+		const allFiltered = getFilteredAndSortedNumbers();
+		const startIndex = (currentPage - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		return allFiltered.slice(startIndex, endIndex);
+	};
+
+	// Calculer le nombre total de pages
+	const getTotalPages = () => {
+		const allFiltered = getFilteredAndSortedNumbers();
+		return Math.ceil(allFiltered.length / itemsPerPage);
+	};
+
+	// Réinitialiser la page à 1 quand les filtres changent
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filterType, sortBy, query]);
+
 	// Générer le badge de statut
 	const getOwnershipBadge = (item: NumItem) => {
 		if (!item.owner) {
@@ -989,6 +1071,62 @@ export default function Home() {
 			return easterEggs[query];
 		}
 		return null;
+	};
+
+	// Effets pour déclencher les unlocks basés sur les compteurs
+	useEffect(() => {
+		// Chroma requires 7 logo clicks
+		if (logoClickCount >= 7) {
+			tryUnlockByAction("c_chroma");
+		}
+	}, [logoClickCount]);
+
+	useEffect(() => {
+		// Secret requires 10 search icon clicks
+		if (searchIconClickCount >= 10) {
+			tryUnlockByAction("s_secret");
+		}
+	}, [searchIconClickCount]);
+
+	// Tracker le scroll pour le bouton flottant
+	useEffect(() => {
+		const handleScroll = () => {
+			const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+			const scrollHeight = document.documentElement.scrollHeight;
+			const clientHeight = document.documentElement.clientHeight;
+			
+			// Si on est à moins de 300px du bas, on affiche la flèche vers le haut
+			const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
+			setShowScrollTop(isNearBottom);
+		};
+
+		window.addEventListener('scroll', handleScroll);
+		handleScroll(); // Check initial state
+		
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, []);
+
+	// Tentative de déblocage basé sur les interactions (logo clicks, search icon clicks, ou recherche)
+	const tryUnlockByAction = (eggId: string) => {
+		setNumbers(prev => {
+			const updated = prev.map(n => {
+				if (n.id === eggId) {
+					// Si déjà débloqué, ne rien faire
+					if (n.unlocked) return n;
+					// Débloquer
+					const newItem = { ...n, unlocked: true };
+					// Si free-to-claim et user connecté -> le donner directement
+					if (newItem.isFreeToClaim && account) {
+						newItem.owner = account;
+					}
+					return newItem;
+				}
+				return n;
+			});
+			// Check achievements après le déblocage
+			setTimeout(() => checkAchievements(updated), 50);
+			return updated;
+		});
 	};
 
 	// Unlock easter egg
@@ -1175,60 +1313,166 @@ export default function Home() {
 
 		{/* Navigation */}
 		<nav className="lux-nav">
-			<div className="lux-nav-content">
+			<div className="lux-nav-content" style={{transition: 'all 0.3s ease'}}>
 				{/* Logo */}
-				<div className="lux-logo" onClick={() => { setSelected(null); setQuery(""); }}>
+				<div 
+					className="lux-logo" 
+					onClick={() => { setSelected(null); setQuery(""); setSearchOpen(false); setLogoClickCount(c => c + 1); }}
+					style={{
+						transition: 'all 0.3s ease',
+						transform: searchOpen ? 'scale(0.75)' : 'scale(1)',
+						transformOrigin: 'left center',
+						opacity: searchOpen ? 0.7 : 1
+					}}
+				>
 					<div className="lux-logo-icon">№</div>
-					<div className="lux-logo-text">
+					<div className="lux-logo-text" style={{display: searchOpen ? 'none' : 'block'}}>
 						<h1>Numberz</h1>
 						<span>NFT COLLECTION</span>
 					</div>
 				</div>
 
-				{/* Search */}
-			<div className="lux-search">
-				<input
-					value={query}
-					onChange={(e: any) => setQuery(e.target.value)}
-					onKeyDown={(e: any) => {
-						if (e.key === "Enter" && account) {
-							const eggId = detectEasterEgg(query);
-							if (eggId) {
-								unlockEasterEgg(eggId);
-								setQuery("");
-							}
-						}
+				{/* Search - Collapsible */}
+				<div className="lux-search" style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
+					{searchOpen ? (
+						<>
+							<input
+								value={query}
+								onChange={(e: any) => setQuery(e.target.value)}
+								onKeyDown={(e: any) => {
+									if (e.key === "Enter" && account) {
+										const eggId = detectEasterEgg(query);
+										if (eggId) {
+											unlockEasterEgg(eggId);
+											setQuery("");
+											setSearchOpen(false);
+										}
+									}
+									if (e.key === "Escape") {
+										setSearchOpen(false);
+										setQuery("");
+									}
+								}}
+								placeholder="Search... (try: darius, wukong, nyan...)"
+								className="lux-search-input"
+								autoFocus
+								style={{
+									width: '320px',
+									transition: 'width 0.3s ease',
+								}}
+							/>
+							<button 
+								onClick={() => { setSearchOpen(false); setQuery(""); }}
+								style={{
+									position: 'absolute',
+									right: '0.75rem',
+									background: 'transparent',
+									border: 'none',
+									color: 'rgba(255,255,255,0.5)',
+									cursor: 'pointer',
+									padding: '0.25rem',
+									display: 'flex',
+									alignItems: 'center',
+									transition: 'color 0.2s'
+								}}
+								onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.9)'}
+								onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
+							>
+								<svg style={{width: '20px', height: '20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+								</svg>
+							</button>
+						</>
+					) : (
+						<button 
+							onClick={() => { setSearchOpen(true); setSearchIconClickCount(c => c + 1); }}
+							style={{
+								background: 'rgba(255,255,255,0.05)',
+								border: '1px solid rgba(255,255,255,0.1)',
+								borderRadius: '0.75rem',
+								padding: '0.75rem',
+								cursor: 'pointer',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								transition: 'all 0.2s',
+								color: 'rgba(255,255,255,0.7)'
+							}}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+								e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.3)';
+								e.currentTarget.style.color = 'rgba(255,255,255,0.9)';
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+								e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+								e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+							}}
+						>
+							<svg style={{width: '20px', height: '20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+							</svg>
+						</button>
+					)}
+				</div>				{/* Wallet */}
+				<div 
+					className="lux-wallet"
+					style={{
+						transition: 'all 0.3s ease',
+						gap: searchOpen ? '0.4rem' : '0.75rem',
+						flexWrap: searchOpen ? 'wrap' : 'nowrap'
 					}}
-					placeholder="Search... (try: darius, wukong, nyan...)"
-					className="lux-search-input"
-				/>
-				<svg className="lux-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-				</svg>
-			</div>				{/* Wallet */}
-				<div className="lux-wallet">
+				>
 					{account && (
 						<>
-							<div className="lux-wallet-badge">
+							<div 
+								className="lux-wallet-badge"
+								style={{
+									transition: 'all 0.3s ease',
+									fontSize: searchOpen ? '0.75rem' : '0.875rem'
+								}}
+								title={networkCorrect ? "✅ Connected to Base Mainnet (Chain ID: 8453)" : "⚠️ Wrong network - Please switch to Base Mainnet"}
+							>
 								<div style={{width: '6px', height: '6px', borderRadius: '50%', backgroundColor: networkCorrect ? '#4ade80' : '#f87171'}} />
 								<span>{account.slice(0, 6)}...{account.slice(-4)}</span>
 							</div>
-							<div style={{fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.7rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px'}}>
+							<div style={{
+								fontSize: searchOpen ? '0.65rem' : '0.75rem', 
+								color: 'rgba(255,255,255,0.6)', 
+								display: searchOpen ? 'none' : 'flex', 
+								alignItems: 'center', 
+								gap: '0.4rem', 
+								padding: '0.4rem 0.7rem', 
+								background: 'rgba(255,255,255,0.05)', 
+								border: '1px solid rgba(255,255,255,0.1)', 
+								borderRadius: '6px',
+								transition: 'all 0.3s ease'
+							}}>
 								<svg style={{width: '0.8rem', height: '0.8rem'}} fill="currentColor" viewBox="0 0 20 20">
 									<path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
 								</svg>
-								{ethBalance} ETH
+								{baseBalance} BASE
 							</div>
 							<button 
 								onClick={() => document.querySelector('.lux-hero')?.scrollIntoView({ behavior: 'smooth' })}
-								style={{padding: '0.6rem 1rem', fontSize: '0.85rem', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white', cursor: 'pointer', transition: 'all 200ms ease'}}
+								style={{
+									padding: searchOpen ? '0.5rem 0.75rem' : '0.6rem 1rem', 
+									fontSize: searchOpen ? '0.75rem' : '0.85rem', 
+									background: 'rgba(255,255,255,0.08)', 
+									border: '1px solid rgba(255,255,255,0.1)', 
+									borderRadius: '6px', 
+									color: 'white', 
+									cursor: 'pointer', 
+									transition: 'all 0.3s ease',
+									display: searchOpen ? 'none' : 'block'
+								}}
 							>
 								My Numbers
 							</button>
 						</>
 					)}
 					{account && (
-						<a href="/easter-eggs" style={{display: 'inline-block'}}>
+						<a href="/easter-eggs" style={{display: searchOpen ? 'none' : 'inline-block', transition: 'all 0.3s ease'}}>
 							<button 
 								className="lux-wallet-btn"
 								style={{background: 'rgba(236,72,153,0.2)', border: '1px solid rgba(236,72,153,0.4)'}}
@@ -1244,7 +1488,12 @@ export default function Home() {
 								alert(`🏆 Achievements: ${unlockedCount}/${achievements.length}\n\n${achievements.map(a => (a.unlocked ? "✅" : "🔒") + " " + a.name + "\n" + a.description).join("\n\n")}`);
 							}} 
 							className="lux-wallet-btn"
-							style={{background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.4)'}}
+							style={{
+								background: 'rgba(168,85,247,0.2)', 
+								border: '1px solid rgba(168,85,247,0.4)',
+								display: searchOpen ? 'none' : 'flex',
+								transition: 'all 0.3s ease'
+							}}
 						>
 							🏆 Achievements
 						</button>
@@ -1257,7 +1506,8 @@ export default function Home() {
 								background: clearConfirmationStep > 0 ? 'rgba(220,38,38,0.4)' : 'rgba(239,68,68,0.2)', 
 								border: clearConfirmationStep > 0 ? '1px solid rgba(220,38,38,0.6)' : '1px solid rgba(239,68,68,0.4)',
 								fontWeight: clearConfirmationStep > 0 ? 700 : 500,
-								transition: 'all 200ms ease'
+								transition: 'all 0.3s ease',
+								display: searchOpen ? 'none' : 'flex'
 							}}
 						>
 							{clearConfirmationStep === 0 && "🗑️ Clear Data"}
@@ -1268,6 +1518,11 @@ export default function Home() {
 					<button 
 						onClick={account ? disconnectWallet : connectWallet} 
 						className="lux-wallet-btn"
+						style={{
+							transition: 'all 0.3s ease',
+							padding: searchOpen ? '0.5rem 0.75rem' : undefined,
+							fontSize: searchOpen ? '0.8rem' : undefined
+						}}
 					>
 						{account ? "Disconnect" : "Connect"}
 					</button>
@@ -1319,7 +1574,7 @@ export default function Home() {
 				<section className="lux-hero">
 					<div style={{textAlign: 'center'}}>
 						<div className="lux-hero-badge">
-							✨ Sepolia Testnet • Blockchain-Certified Numbers
+							✨ Base Mainnet • Blockchain-Certified Numbers
 						</div>
 						
 						<h2 style={{fontSize: 'clamp(2.5rem, 8vw, 4rem)', fontWeight: 900, marginTop: '2rem', marginBottom: '1rem'}}>
@@ -1379,7 +1634,7 @@ export default function Home() {
 					))}
 				</div>
 
-				{getFilteredAndSortedNumbers()
+				{getPaginatedNumbers()
 					.map((n: NumItem) => {
 						const isOwned = !!n.owner;
 						const glowColor = rarityStyle(n.rarity).glowColor;
@@ -1457,7 +1712,7 @@ export default function Home() {
 										<div style={{display: 'grid', gap: '0.5rem', fontSize: '0.875rem'}}>
 											<div style={{display: 'flex', justifyContent: 'space-between'}}>
 												<span style={{color: 'rgba(255,255,255,0.6)'}}>Prix:</span>
-												<span style={{color: 'white', fontWeight: 600}}>{n.priceEth} ETH</span>
+												<span style={{color: 'white', fontWeight: 600}}>{n.priceEth} BASE</span>
 											</div>
 											<div style={{display: 'flex', justifyContent: 'space-between'}}>
 												<span style={{color: 'rgba(255,255,255,0.6)'}}>Statut:</span>
@@ -1492,9 +1747,14 @@ export default function Home() {
 					<div style={{display: 'flex', gap: '0.75rem', flexWrap: 'wrap'}}>
 						<span style={{padding: '0.375rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, background: rarityStyle(n.rarity).badgeColor, color: rarityStyle(n.rarity).badgeText, border: `1px solid ${rarityStyle(n.rarity).badgeBorder}`, textTransform: 'uppercase', letterSpacing: '0.05em'}}>
 							{n.rarity}
+							{n.isEasterEgg && !n.unlocked && (
+								<span style={{marginLeft: '0.5rem', padding: '0.25rem 0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', color: '#f87171', fontWeight: 700, fontSize: '0.75rem'}}>
+									Locked
+								</span>
+							)}
 						</span>
 						<span style={{padding: '0.375rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)'}}>
-							{n.priceEth} ETH
+							{n.priceEth} BASE
 						</span>
 						<span style={{padding: '0.375rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, background: ownershipBadge.bg, color: ownershipBadge.color, border: `1px solid ${ownershipBadge.color}40`}}>
 							{ownershipBadge.label}
@@ -1544,6 +1804,93 @@ export default function Home() {
 							</div>
 						);
 					})}
+
+				{/* Pagination Controls */}
+				{getTotalPages() > 1 && (
+					<div style={{
+						display: 'flex', 
+						justifyContent: 'center', 
+						alignItems: 'center', 
+						gap: '1rem', 
+						marginTop: '3rem',
+						marginBottom: '2rem',
+						padding: '1.5rem',
+						background: 'rgba(255,255,255,0.03)',
+						border: '1px solid rgba(255,255,255,0.08)',
+						borderRadius: '1rem'
+					}}>
+						<button
+							onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+							disabled={currentPage === 1}
+							style={{
+								padding: '0.75rem 1.25rem',
+								borderRadius: '0.75rem',
+								background: currentPage === 1 ? 'rgba(255,255,255,0.03)' : 'rgba(251,191,36,0.15)',
+								border: '1px solid rgba(255,255,255,0.1)',
+								color: currentPage === 1 ? 'rgba(255,255,255,0.3)' : '#fbbf24',
+								cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+								fontWeight: 600,
+								fontSize: '0.875rem',
+								transition: 'all 0.3s',
+								display: 'flex',
+								alignItems: 'center',
+								gap: '0.5rem'
+							}}
+						>
+							<svg style={{width: '16px', height: '16px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+							</svg>
+							Previous
+						</button>
+
+						<div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+							{Array.from({ length: getTotalPages() }, (_, i) => i + 1).map(pageNum => (
+								<button
+									key={pageNum}
+									onClick={() => setCurrentPage(pageNum)}
+									style={{
+										width: '40px',
+										height: '40px',
+										borderRadius: '0.5rem',
+										background: currentPage === pageNum ? 'linear-gradient(to right, #fbbf24, #f87171)' : 'rgba(255,255,255,0.05)',
+										border: currentPage === pageNum ? 'none' : '1px solid rgba(255,255,255,0.1)',
+										color: currentPage === pageNum ? 'black' : 'rgba(255,255,255,0.7)',
+										cursor: 'pointer',
+										fontWeight: currentPage === pageNum ? 700 : 600,
+										fontSize: '0.875rem',
+										transition: 'all 0.3s'
+									}}
+								>
+									{pageNum}
+								</button>
+							))}
+						</div>
+
+						<button
+							onClick={() => setCurrentPage(Math.min(getTotalPages(), currentPage + 1))}
+							disabled={currentPage === getTotalPages()}
+							style={{
+								padding: '0.75rem 1.25rem',
+								borderRadius: '0.75rem',
+								background: currentPage === getTotalPages() ? 'rgba(255,255,255,0.03)' : 'rgba(251,191,36,0.15)',
+								border: '1px solid rgba(255,255,255,0.1)',
+								color: currentPage === getTotalPages() ? 'rgba(255,255,255,0.3)' : '#fbbf24',
+								cursor: currentPage === getTotalPages() ? 'not-allowed' : 'pointer',
+								fontWeight: 600,
+								fontSize: '0.875rem',
+								transition: 'all 0.3s',
+								display: 'flex',
+								alignItems: 'center',
+								gap: '0.5rem'
+							}}
+						>
+							Next
+							<svg style={{width: '16px', height: '16px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+							</svg>
+						</button>
+					</div>
+				)}
 			</main>
 
 			{/* Modal */}
@@ -1604,7 +1951,7 @@ export default function Home() {
 								<div style={{borderRadius: '1rem', background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', border: '1px solid rgba(255,255,255,0.1)', padding: '1.5rem'}}>
 									<div style={{fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem'}}>Price</div>
 									<div style={{fontSize: '1.875rem', fontWeight: 900, background: 'linear-gradient(to right, #fcd34d, #d8b4fe)', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
-										{selected.priceEth} ETH
+										{selected.priceEth} BASE
 									</div>
 									<div style={{fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.25rem'}}>≈ ${(parseFloat(selected.priceEth) * 2000).toFixed(2)} USD</div>
 								</div>
@@ -1618,7 +1965,7 @@ export default function Home() {
 												🔥 FOR SALE
 											</div>
 											<div style={{fontSize: '0.875rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.7)', wordBreak: 'break-all'}}>
-												Price: {selected.salePrice} ETH
+												Price: {selected.salePrice} BASE
 											</div>
 										</div>
 									) : selected.owner ? (
@@ -1645,7 +1992,7 @@ export default function Home() {
 							<div>
 								<div style={{fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem'}}>Actions</div>
 								
-								{!selected.owner && (
+								{!selected.owner && (!selected.isEasterEgg || (selected.isEasterEgg && selected.unlocked)) && (
 									<div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
 										<button
 											onClick={() => { buyNumber(selected); setSelected(null); }}
@@ -1655,7 +2002,7 @@ export default function Home() {
 											<svg style={{width: '20px', height: '20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
 											</svg>
-											Buy for {selected.priceEth} ETH
+											Buy for {selected.priceEth} BASE
 										</button>
 
 										<button
@@ -1685,7 +2032,7 @@ export default function Home() {
 														<div key={idx} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.825rem'}}>
 															<div style={{display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1}}>
 																<span style={{fontFamily: 'monospace', color: 'rgba(255,255,255,0.7)'}}>{buyer.address.slice(0, 10)}...{buyer.address.slice(-8)}</span>
-																<span style={{color: '#fbbf24', fontWeight: 600}}>{buyer.priceEth} ETH</span>
+																						<span style={{color: '#fbbf24', fontWeight: 600}}>{buyer.priceEth} BASE</span>
 															</div>
 														</div>
 													))}
@@ -1695,7 +2042,7 @@ export default function Home() {
 									</div>
 								)}
 
-								{selected.forSale && selected.owner && selected.owner.toLowerCase() !== account?.toLowerCase() && (
+								{selected.forSale && selected.owner && selected.owner.toLowerCase() !== account?.toLowerCase() && (!selected.isEasterEgg || (selected.isEasterEgg && selected.unlocked)) && (
 									<div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
 										<button
 											onClick={() => { buyNumber(selected); setSelected(null); }}
@@ -1705,7 +2052,7 @@ export default function Home() {
 											<svg style={{width: '20px', height: '20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
 											</svg>
-											Buy for {selected.salePrice} ETH
+											Buy for {selected.salePrice} BASE
 										</button>
 									</div>
 								)}
@@ -1724,7 +2071,7 @@ export default function Home() {
 										{selectedSaleMode === "fixedPrice" && (
 											<div style={{padding: '1rem', borderRadius: '1rem', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(20, 184, 166, 0.1))', border: '1px solid rgba(16, 185, 129, 0.3)', display: 'flex', flexDirection: 'column', gap: '0.75rem', animation: 'slideDown 0.3s ease-out'}}>
 												<label style={{fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)'}}>
-													Votre prix (ETH):
+													Votre prix (BASE):
 												</label>
 												<input
 													value={salePrice}
@@ -1736,7 +2083,7 @@ export default function Home() {
 													style={{width: '100%', padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'white', fontSize: '0.875rem', outline: 'none'}}
 												/>
 												<p style={{fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', margin: '0.5rem 0 0 0'}}>
-													Remboursement si vendu: {salePrice ? (parseFloat(salePrice) * 0.7).toFixed(4) : "0"} ETH (70% via smart contract)
+													Remboursement si vendu: {salePrice ? (parseFloat(salePrice) * 0.7).toFixed(4) : "0"} BASE (70% via smart contract)
 												</p>
 												<button
 													onClick={() => initiateNumberSale(selected, "fixedPrice", salePrice)}
@@ -1766,7 +2113,7 @@ export default function Home() {
 														<div key={idx} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.825rem'}}>
 															<div style={{display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1}}>
 																<span style={{fontFamily: 'monospace', color: 'rgba(255,255,255,0.7)'}}>{buyer.address.slice(0, 10)}...{buyer.address.slice(-8)}</span>
-																<span style={{color: '#fbbf24', fontWeight: 600}}>{buyer.priceEth} ETH</span>
+																<span style={{color: '#fbbf24', fontWeight: 600}}>{buyer.priceEth} BASE</span>
 															</div>
 														</div>
 													))}
@@ -1785,7 +2132,7 @@ export default function Home() {
 												<div key={idx} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.825rem'}}>
 													<div style={{display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1}}>
 														<span style={{fontFamily: 'monospace', color: 'rgba(255,255,255,0.7)'}}>{buyer.address.slice(0, 10)}...{buyer.address.slice(-8)}</span>
-														<span style={{color: '#fbbf24', fontWeight: 600}}>{buyer.priceEth} ETH</span>
+														<span style={{color: '#fbbf24', fontWeight: 600}}>{buyer.priceEth} BASE</span>
 													</div>
 												</div>
 											))}
@@ -1830,7 +2177,7 @@ export default function Home() {
 
 						<div style={{padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
 							<div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
-								<label style={{fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)'}}>Prix (ETH)</label>
+								<label style={{fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)'}}>Prix (BASE)</label>
 								<input
 									value={interestedPrice}
 									onChange={(e: any) => setInterestedPrice(e.target.value)}
@@ -1877,11 +2224,84 @@ export default function Home() {
 				</div>
 			)}
 
+			{/* Floating Scroll Button */}
+			<button
+				onClick={() => {
+					if (showScrollTop) {
+						// Scroll to top
+						window.scrollTo({ top: 0, behavior: 'smooth' });
+					} else {
+						// Scroll to footer
+						document.querySelector('.lux-footer')?.scrollIntoView({ behavior: 'smooth' });
+					}
+				}}
+				style={{
+					position: 'fixed',
+					bottom: '2rem',
+					right: '2rem',
+					width: '56px',
+					height: '56px',
+					borderRadius: '50%',
+					background: 'linear-gradient(135deg, #fbbf24, #f87171)',
+					border: '2px solid rgba(255,255,255,0.2)',
+					color: 'white',
+					cursor: 'pointer',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					boxShadow: '0 8px 32px rgba(251, 191, 36, 0.4)',
+					transition: 'all 0.3s ease',
+					zIndex: 1000,
+					transform: 'scale(1)'
+				}}
+				onMouseEnter={(e) => {
+					e.currentTarget.style.transform = 'scale(1.1)';
+					e.currentTarget.style.boxShadow = '0 12px 40px rgba(251, 191, 36, 0.6)';
+				}}
+				onMouseLeave={(e) => {
+					e.currentTarget.style.transform = 'scale(1)';
+					e.currentTarget.style.boxShadow = '0 8px 32px rgba(251, 191, 36, 0.4)';
+				}}
+				title={showScrollTop ? 'Scroll to top' : 'Scroll to footer'}
+			>
+				<svg 
+					style={{
+						width: '24px', 
+						height: '24px',
+						transition: 'transform 0.3s ease',
+						transform: showScrollTop ? 'rotate(180deg)' : 'rotate(0deg)'
+					}} 
+					fill="none" 
+					stroke="currentColor" 
+					viewBox="0 0 24 24"
+				>
+					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+				</svg>
+			</button>
+
 			{/* Footer */}
 			<footer className="lux-footer">
 				<div className="lux-footer-content">
-					<div style={{fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)'}}>
-						<span style={{fontWeight: 600, color: 'rgba(255,255,255,0.7)'}}>Numberz</span> • Built on Sepolia Testnet
+					<div style={{fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+						<div>
+							<span style={{fontWeight: 600, color: 'rgba(255,255,255,0.7)'}}>Numberz</span> • Built on Base Mainnet
+						</div>
+						{currentChainId && (
+							<div 
+								style={{
+									padding: '0.25rem 0.5rem', 
+									borderRadius: '0.375rem', 
+									background: currentChainId === BASE_CHAIN_ID ? 'rgba(74, 222, 128, 0.15)' : 'rgba(248, 113, 113, 0.15)',
+									border: `1px solid ${currentChainId === BASE_CHAIN_ID ? 'rgba(74, 222, 128, 0.3)' : 'rgba(248, 113, 113, 0.3)'}`,
+									fontSize: '0.7rem',
+									fontFamily: 'monospace',
+									color: currentChainId === BASE_CHAIN_ID ? '#4ade80' : '#f87171'
+								}}
+								title={`Current Chain ID: ${currentChainId} (${parseInt(currentChainId, 16)})`}
+							>
+								{currentChainId === BASE_CHAIN_ID ? '✓ Base Mainnet' : `⚠ Chain: ${parseInt(currentChainId, 16)}`}
+							</div>
+						)}
 					</div>
 					<div className="lux-footer-links">
 						<a href="#" style={{color: 'rgba(255,255,255,0.4)', textDecoration: 'none', fontSize: '0.75rem', transition: 'color 0.3s'}}>Documentation</a>
