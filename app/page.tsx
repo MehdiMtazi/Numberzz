@@ -545,19 +545,25 @@ export default function Home() {
 		}
 
 		try {
-			// Essayer d'obtenir les comptes directement (méthode la plus répandue)
+			// FORCER la demande de permissions à chaque fois pour garantir l'interaction avec MetaMask
+			// Cela ouvre TOUJOURS la popup MetaMask même si l'app était déjà connectée
 			let accounts: string[] | undefined;
+			
 			try {
-				accounts = await eth.request({ method: "eth_requestAccounts" });
-			} catch (reqErr) {
-				// Certains wallets n'implémentent pas eth_requestAccounts de la même façon
-				// On essaie un fallback vers wallet_requestPermissions puis eth_accounts
+				// Demander explicitement les permissions (ouvre TOUJOURS MetaMask)
+				await eth.request({ 
+					method: "wallet_requestPermissions", 
+					params: [{ eth_accounts: {} }] 
+				});
+				
+				// Après avoir obtenu la permission, récupérer les comptes
+				accounts = await eth.request({ method: "eth_accounts" });
+			} catch (permErr) {
+				// Si wallet_requestPermissions échoue, essayer la méthode standard
 				try {
-					await eth.request({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] });
-					accounts = await eth.request({ method: "eth_accounts" });
-				} catch (permErr) {
-					// Si les deux échouent, remonter l'erreur
-					throw reqErr || permErr;
+					accounts = await eth.request({ method: "eth_requestAccounts" });
+				} catch (reqErr) {
+					throw permErr || reqErr;
 				}
 			}
 
@@ -566,12 +572,17 @@ export default function Home() {
 				return;
 			}
 
-			setAccount(accounts[0]);
+			const selectedAccount = accounts[0];
+			setAccount(selectedAccount);
+
+			console.log(`✅ Connecté au wallet: ${selectedAccount}`);
+			console.log(`🏦 Wallet banque: ${bankWalletAddress}`);
+			console.log(`🔐 Est le wallet banque: ${selectedAccount.toLowerCase() === bankWalletAddress.toLowerCase()}`);
 
 			// Récupérer la balance ETH (défensif si la réponse n'est pas la bonne)
 			let balanceHex: string | null = null;
 			try {
-				balanceHex = await eth.request({ method: "eth_getBalance", params: [accounts[0], "latest"] });
+				balanceHex = await eth.request({ method: "eth_getBalance", params: [selectedAccount, "latest"] });
 			} catch (balErr) {
 				console.warn("Impossible de récupérer la balance via eth_getBalance:", balErr);
 			}
