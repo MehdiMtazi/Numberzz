@@ -1,0 +1,522 @@
+/* Reset & Base Styles */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+:root {
+  --background: #070812;
+  --foreground: #ffffff;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-inter), Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+code {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-family: var(--font-source-code-pro), monospace;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Smooth scrolling & custom scrollbar */
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ==================== LUXURY DESIGN CLASSES ==================== */
+
+.lux-root {
+  background: linear-gradient(135deg, #070812 0%, #0f0b18 50%, #1a0a2e 100%);
+  color: #fff;
+  min-height: 100vh;
+}
+
+.lux-nav {
+  backdrop-filter: blur(12px);
+  background: rgba(7, 8, 18, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.2rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.lux-nav-content {
+  max-width: 90rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+}
+
+.lux-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+
+.lux-logo:hover {
+  opacity: 0.8;
+}
+
+.lux-logo-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(135deg, #fbbf24 0%, #a855f7 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: 900;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.2);
+  transition: all 200ms ease;
+}
+
+.lux-logo:hover .lux-logo-icon {
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
+  transform: scale(1.05);
+}
+
+.lux-logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.lux-logo-text h1 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1;
+}
+
+.lux-logo-text span {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.lux-search {
+  flex: 1;
+  max-width: 24rem;
+  position: relative;
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .lux-search {
+    display: block;
+  }
+}
+
+.lux-search input {
+  width: 100%;
+  padding: 0.65rem 1.25rem 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font-size: 0.85rem;
+  backdrop-filter: blur(8px);
+  transition: all 200ms ease;
+}
+
+.lux-search input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.lux-search input:focus {
+  outline: none;
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1);
+}
+
+.lux-search-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.9rem;
+  height: 0.9rem;
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.lux-wallet {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.lux-wallet-badge {
+  padding: 0.55rem 0.9rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: 'Monaco', 'Courier New', monospace;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 200ms ease;
+}
+
+.lux-wallet-badge:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.lux-wallet-btn {
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #fbbf24 0%, #a855f7 100%);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 200ms ease;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+}
+
+.lux-wallet-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+}
+
+.lux-wallet-btn:active {
+  transform: translateY(0);
+}
+
+.lux-hero {
+  text-align: center;
+  padding: 4rem 1.5rem 3rem;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.lux-hero-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fbbf24;
+  margin-bottom: 1rem;
+}
+
+.lux-hero h2 {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #fef3c7, #fbbf24, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lux-hero p {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.lux-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.lux-stat {
+  text-align: center;
+}
+
+.lux-stat-value {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #fbbf24, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lux-stat-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1.5rem;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 5rem;
+}
+
+.lux-card {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(168, 85, 247, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 250ms ease;
+  cursor: pointer;
+}
+
+.lux-card:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 20px 50px rgba(251, 191, 36, 0.2);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.lux-card-content {
+  position: relative;
+  z-index: 2;
+  font-size: 3rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.lux-card-price {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  z-index: 3;
+}
+
+.lux-card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.lux-card:hover .lux-card-badge {
+  opacity: 1;
+}
+
+.lux-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(8px);
+  padding: 2rem 1.5rem;
+  margin-top: 4rem;
+}
+
+.lux-footer-content {
+  max-width: 80rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+}
+
+@media (min-width: 640px) {
+  .lux-footer-content {
+    flex-direction: row;
+  }
+}
+
+.lux-footer-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.lux-footer-links a {
+  transition: color 200ms ease;
+}
+
+.lux-footer-links a:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Utility animations */
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Modal Overlay */
+.lux-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Modal Content */
+.lux-modal-content {
+  width: 100%;
+  max-width: 48rem;
+  background: linear-gradient(to bottom, rgba(26, 31, 58, 0.95), rgba(15, 6, 23, 0.95));
+  backdrop-filter: blur(32px);
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* Modal Header */
+.lux-modal-header {
+  position: relative;
+  padding: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.lux-modal-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(168, 85, 247, 0.1));
+  pointer-events: none;
+}
+
