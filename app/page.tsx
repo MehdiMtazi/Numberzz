@@ -1,6 +1,6 @@
 "use client"
 // @ts-ignore - allow compilation when @types/react isn't resolved in the environment
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { sdk } from '@farcaster/miniapp-sdk';
 
 // Hook pour éviter les erreurs d'hydratation SSR/Client
@@ -907,7 +907,7 @@ export default function Home() {
 		const currentList = interestedByWithPrice[numId] || [];
 		const filtered = currentList.filter((b: InterestedBuyer) => b.address.toLowerCase() !== buyerAddress.toLowerCase());
 
-		let newObj = { ...interestedByWithPrice };
+		const newObj = { ...interestedByWithPrice };
 		if (filtered.length === 0) {
 			delete newObj[numId];
 		} else {
@@ -932,7 +932,7 @@ export default function Home() {
 	};
 
 	// --- Transférer son nombre vers une autre adresse
-	const transferNumber = async (item: NumItem, toAddress: string) => {
+	const _transferNumber = async (item: NumItem, toAddress: string) => {
 		if (!account) {
 			alert("Connectez votre wallet pour transférer.");
 			return;
@@ -1073,20 +1073,40 @@ export default function Home() {
 		return null;
 	};
 
+	// --- NEW: stable tryUnlockByAction (useCallback) placed BEFORE effects that l'utilisent
+	const tryUnlockByAction = useCallback((eggId: string) => {
+		setNumbers(prev => {
+			return prev.map(n => {
+				if (n.id === eggId) {
+					// si déjà débloqué, ne rien faire
+					if (n.unlocked) return n;
+					// débloquer
+					const newItem = { ...n, unlocked: true };
+					// si gratuit et user connecté => lui attribuer directement
+					if (newItem.isFreeToClaim && account) {
+						newItem.owner = account;
+					}
+					return newItem;
+				}
+				return n;
+			});
+		});
+	}, [account]);
+
 	// Effets pour déclencher les unlocks basés sur les compteurs
 	useEffect(() => {
 		// Chroma requires 7 logo clicks
 		if (logoClickCount >= 7) {
 			tryUnlockByAction("c_chroma");
 		}
-	}, [logoClickCount]);
+	}, [logoClickCount, tryUnlockByAction]);
 
 	useEffect(() => {
 		// Secret requires 10 search icon clicks
 		if (searchIconClickCount >= 10) {
 			tryUnlockByAction("s_secret");
 		}
-	}, [searchIconClickCount]);
+	}, [searchIconClickCount, tryUnlockByAction]);
 
 	// Tracker le scroll pour le bouton flottant
 	useEffect(() => {
@@ -1107,27 +1127,7 @@ export default function Home() {
 	}, []);
 
 	// Tentative de déblocage basé sur les interactions (logo clicks, search icon clicks, ou recherche)
-	const tryUnlockByAction = (eggId: string) => {
-		setNumbers(prev => {
-			const updated = prev.map(n => {
-				if (n.id === eggId) {
-					// Si déjà débloqué, ne rien faire
-					if (n.unlocked) return n;
-					// Débloquer
-					const newItem = { ...n, unlocked: true };
-					// Si free-to-claim et user connecté -> le donner directement
-					if (newItem.isFreeToClaim && account) {
-						newItem.owner = account;
-					}
-					return newItem;
-				}
-				return n;
-			});
-			// Check achievements après le déblocage
-			setTimeout(() => checkAchievements(updated), 50);
-			return updated;
-		});
-	};
+
 
 	// Unlock easter egg
 	const unlockEasterEgg = (eggId: string) => {
@@ -1257,6 +1257,14 @@ export default function Home() {
 		}
 	};
 
+	// --- NEW: déclencher la vérification des achievements quand numbers ou account changent
+	useEffect(() => {
+		if (!account) return;
+		checkAchievements(numbers);
+		// intentionally depends on numbers and account only
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [numbers, account]);
+
 	// helper: couleur/style selon la rareté (utilisé pour modal / gradient des cartes)
 	const rarityStyle = (r: NumItem["rarity"]) => {
 		switch (r) {
@@ -1274,7 +1282,7 @@ export default function Home() {
 	};
 
 	// helper: copy text
-	const copyToClipboard = async (text: string) => {
+	const _copyToClipboard = async (text: string) => {
 		try {
 			await navigator.clipboard.writeText(text);
 			alert("Copié dans le presse-papier");
