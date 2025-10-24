@@ -139,13 +139,6 @@ export default function Home() {
 		owner: string | null;
 		unlocked?: boolean; // pour les easter eggs: déverrouillé ou non
 		description?: string;
-		interestedCount?: number;
-		interestedBy?: string[];
-		isEasterEgg?: boolean;
-		easterEggName?: string;
-		isFreeToClaim?: boolean;
-		forSale?: boolean; // true si le propriétaire l'a mis en vente à prix fixe
-		salePrice?: string; // prix de vente fixé par le propriétaire
 	};
 
 	type Achievement = {
@@ -179,9 +172,6 @@ export default function Home() {
 	const [filterType, setFilterType] = useState<"all" | "available" | "ownedByMe" | "ownedByOthers" | "forSale">("all");
 	const [sortBy, setSortBy] = useState<"none" | "priceAsc" | "priceDesc" | "rarity" | "mostInterested">("none");
 	
-	// Double vérification pour clear data (admin only)
-	const [clearConfirmationStep, setClearConfirmationStep] = useState<0 | 1 | 2>(0);
-
 	// Achievements
 	const [achievements, setAchievements] = useState<Achievement[]>([]);
 	const [showAchievementModal, setShowAchievementModal] = useState(false);
@@ -518,17 +508,6 @@ export default function Home() {
 		return () => window.removeEventListener("keydown", onKey);
 	}, []);
 
-	// Réinitialiser clearConfirmationStep après 5 secondes d'inactivité
-	useEffect(() => {
-		if (clearConfirmationStep === 0) return;
-		
-		const timeout = setTimeout(() => {
-			setClearConfirmationStep(0);
-		}, 5000);
-
-		return () => clearTimeout(timeout);
-	}, [clearConfirmationStep]);
-
 	// Initialize achievements on mount
 	useEffect(() => {
 		if (achievements.length === 0) {
@@ -640,45 +619,71 @@ export default function Home() {
 			return;
 		}
 
-		// Étape 1: Première confirmation
-		if (clearConfirmationStep === 0) {
-			setClearConfirmationStep(1);
+		// Confirmation unique avec fenêtre modale
+		const confirmed = window.confirm(
+			"⚠️ ATTENTION - SUPPRESSION TOTALE DE TOUTES LES DONNÉES\n\n" +
+			"Cela va DÉFINITIVEMENT effacer POUR TOUS LES UTILISATEURS:\n\n" +
+			"• Tous les Numbers possédés (exotiques, légendaires, etc.)\n" +
+			"• Tous les droits de propriété\n" +
+			"• Tous les Contrats de Vente\n" +
+			"• Tous les Certificats\n" +
+			"• Toutes les Personnes Intéressées\n" +
+			"• Tous les Achievements\n\n" +
+			"L'application redeviendra VIERGE comme si personne ne l'avait jamais utilisée.\n\n" +
+			"⚠️ CETTE ACTION EST IRRÉVERSIBLE ⚠️\n\n" +
+			"Êtes-vous ABSOLUMENT sûr de vouloir continuer ?"
+		);
+		
+		if (!confirmed) {
 			return;
 		}
 
-		// Étape 2: Deuxième confirmation
-		if (clearConfirmationStep === 1) {
-			const confirmed = window.confirm(
-				"⚠️ DERNIÈRE CHANCE - Êtes-vous ABSOLUMENT sûr?\n\n" +
-				"Cela va effacer DÉFINITIVEMENT:\n" +
-				"• Tous les Numbers\n" +
-				"• Tous les Contrats de Vente\n" +
-				"• Tous les Certificats\n" +
-				"• Tous les Intéressés\n\n" +
-				"Cette action EST IRRÉVERSIBLE"
-			);
-			
-			if (!confirmed) {
-				setClearConfirmationStep(0);
-				return;
-			}
-
-			// Effectuer le clear
+		try {
+			// Supprimer TOUTES les données de TOUS les utilisateurs
+			// 1. Données principales
 			localStorage.removeItem("numberz_numbers");
 			localStorage.removeItem("numberz_contracts");
 			localStorage.removeItem("numberz_certs");
 			localStorage.removeItem("numberz_interested");
 			localStorage.removeItem("numberz_achievements");
 			
+			// 2. Supprimer TOUTES les clés qui contiennent des données utilisateur
+			// (au cas où il y aurait des clés avec préfixes wallet-specific)
+			const allKeys = Object.keys(localStorage);
+			allKeys.forEach(key => {
+				if (key.startsWith("numberz_") || 
+				    key.includes("wallet") || 
+				    key.includes("0x") ||
+				    key.includes("number") ||
+				    key.includes("contract") ||
+				    key.includes("cert") ||
+				    key.includes("achievement")) {
+					localStorage.removeItem(key);
+				}
+			});
+			
+			// 3. Réinitialiser tous les états à leur valeur initiale
 			setNumbers(initialNumbers);
 			setSaleContracts([]);
 			setCerts([]);
 			setInterestedByWithPrice({});
 			setAchievements([]);
-			setClearConfirmationStep(0); // Réinitialiser la confirmation
+			
+			// 4. Diffuser le reset à tous les onglets/fenêtres ouverts
+			const channel = new BroadcastChannel("numberz_sync");
+			channel.postMessage({ 
+				type: "GLOBAL_RESET",
+				timestamp: Date.now()
+			});
+			channel.close();
+			
+			console.log("🗑️ TOUTES les données ont été supprimées par le wallet banque");
 			
 			alert("✅ Toutes les données ont été DÉFINITIVEMENT effacées. La page va se rafraîchir.");
 			window.location.reload();
+		} catch (error) {
+			console.error("Erreur lors de la suppression des données:", error);
+			alert("❌ Une erreur s'est produite lors de la suppression.");
 		}
 	};
 
