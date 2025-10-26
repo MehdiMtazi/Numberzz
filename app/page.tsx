@@ -139,6 +139,14 @@ export default function Home() {
 		owner: string | null;
 		unlocked?: boolean; // pour les easter eggs: déverrouillé ou non
 		description?: string;
+		// Champs optionnels utilisés dans l'app
+		forSale?: boolean;
+		salePrice?: string; // prix en ETH/Base sous forme string
+		interestedCount?: number;
+		interestedBy?: string[];
+		isEasterEgg?: boolean;
+		easterEggName?: string;
+		isFreeToClaim?: boolean;
 	};
 
 	type Achievement = {
@@ -1008,7 +1016,7 @@ export default function Home() {
 					return {
 						...n,
 						interestedCount: Math.max(0, (n.interestedCount || 0) - 1),
-						interestedBy: (n.interestedBy || []).filter(addr => addr.toLowerCase() !== buyerAddress.toLowerCase()),
+						interestedBy: (n.interestedBy || []).filter((addr: string) => addr.toLowerCase() !== buyerAddress.toLowerCase()),
 					};
 				}
 				return n;
@@ -1645,18 +1653,16 @@ export default function Home() {
 							onClick={clearAllData} 
 							className="lux-wallet-btn"
 							style={{
-								background: clearConfirmationStep > 0 ? 'rgba(220,38,38,0.4)' : 'rgba(239,68,68,0.2)', 
-								border: clearConfirmationStep > 0 ? '1px solid rgba(220,38,38,0.6)' : '1px solid rgba(239,68,68,0.4)',
-								fontWeight: clearConfirmationStep > 0 ? 700 : 500,
+								background: 'rgba(239,68,68,0.2)', 
+								border: '1px solid rgba(239,68,68,0.4)',
+								fontWeight: 600,
 								transition: 'all 0.3s ease',
 								fontSize: '0.75rem',
 								padding: '0.5rem 0.75rem',
 								whiteSpace: 'nowrap'
 							}}
 						>
-							{clearConfirmationStep === 0 && "🗑️ Clear Data"}
-							{clearConfirmationStep === 1 && "⚠️ Confirm"}
-							{clearConfirmationStep === 2 && "Clearing..."}
+							🗑️ Clear Data
 						</button>
 					)}
 					<button 
@@ -1779,16 +1785,14 @@ export default function Home() {
 										className="lux-wallet-btn"
 										style={{
 											width: '100%',
-											background: clearConfirmationStep > 0 ? 'rgba(220,38,38,0.4)' : 'rgba(239,68,68,0.2)', 
-											border: clearConfirmationStep > 0 ? '1px solid rgba(220,38,38,0.6)' : '1px solid rgba(239,68,68,0.4)',
-											fontWeight: clearConfirmationStep > 0 ? 700 : 500,
+											background: 'rgba(239,68,68,0.2)', 
+											border: '1px solid rgba(239,68,68,0.4)',
+											fontWeight: 600,
 											padding: '0.75rem',
 											fontSize: '0.875rem'
 										}}
 									>
-										{clearConfirmationStep === 0 && "🗑️ Clear Data"}
-										{clearConfirmationStep === 1 && "⚠️ Confirm (click again)"}
-										{clearConfirmationStep === 2 && "Clearing..."}
+										🗑️ Clear Data
 									</button>
 								)}
 							</>
@@ -2323,7 +2327,7 @@ export default function Home() {
 												const alreadyInterested = (selected.interestedBy || []).includes(account || '');
 												if (alreadyInterested) {
 													removeInterest(selected.id, account || '');
-													setSelected({...selected, interestedCount: Math.max(0, (selected.interestedCount || 0) - 1), interestedBy: (selected.interestedBy || []).filter(addr => addr !== account)});
+													setSelected({...selected, interestedCount: Math.max(0, (selected.interestedCount || 0) - 1), interestedBy: (selected.interestedBy || []).filter((addr: string) => addr !== account)});
 												} else {
 													setInterestedItemId(selected.id);
 													setInterestedPrice("");
