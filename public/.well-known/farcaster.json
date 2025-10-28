@@ -1,0 +1,20 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjEzOTczNjQsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhFQzc5YzYzRUUyMTI5NUE3ODJiMzllQ2ZGY0M2ZDE3MzZmZjU2YjZhIn0",
+    "payload": "eyJkb21haW4iOiJudW1iZXJ6ei52ZXJjZWwuYXBwIn0",
+    "signature": "If/4EIB/avc5nKK3sYNAu5/Q3gStQA2eZF7eMjwek5EPTv3rEUiloKdZG+CTsjDTJ3KTeRkqOZjYoBooZsG+wRw="
+  },
+  "frame": {
+    "version": "1",
+    "name": "Numberzz",
+    "iconUrl": "https://numberzz.vercel.app/icon.png",
+    "homeUrl": "https://numberzz.vercel.app",
+    "imageUrl": "https://numberzz.vercel.app/hero.png",
+    "splashImageUrl": "https://numberzz.vercel.app/splash.png",
+    "splashBackgroundColor": "#000000",
+    "webhookUrl": "https://numberzz.vercel.app/api/webhook",
+    "description": "Numberzz: Unique NFT numbers on Base. Each token tells a story. Collect and discover the significance behind every digit in this digital collectible experience.",
+    "subtitle": "Collect and Trade Numbers",
+    "primaryCategory": "utility"
+  }
+}
