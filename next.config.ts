@@ -8,6 +8,14 @@ const nextConfig = {
     // Désactive aussi les vérifications TypeScript (optionnel)
     ignoreBuildErrors: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/.well-known/farcaster.json',
+        destination: '/api/.well-known/farcaster',
+      },
+    ];
+  },
   async headers() {
     return [
       {
