@@ -2693,7 +2693,7 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 											<svg style={{width: '20px', height: '20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
 											</svg>
-											Buy for {selected.priceEth} SEPOLIA
+											Buy for {selected.priceEth} ETH
 										</button>
 
 										<button
@@ -2715,7 +2715,7 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 											<svg style={{width: '20px', height: '20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
 											</svg>
-											Buy for {selected.salePrice} SEPOLIA
+											Buy for {selected.salePrice} ETH
 										</button>
 
 									</div>
@@ -2753,7 +2753,7 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 													<div key={idx} style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.825rem'}}>
 														<div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
 															<span style={{fontFamily: 'monospace', color: 'rgba(255,255,255,0.7)'}}>{buyer.address.slice(0, 10)}...{buyer.address.slice(-8)}</span>
-															<span style={{color: '#fbbf24', fontWeight: 600}}>{buyer.priceEth} SEPOLIA</span>
+															<span style={{color: '#fbbf24', fontWeight: 600}}>{buyer.priceEth} ETH</span>
 														</div>
 														{buyer.comment && (
 															<div style={{padding: '0.5rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.03)', borderLeft: '2px solid rgba(251, 191, 36, 0.5)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)', fontStyle: 'italic', wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal'}}>
@@ -2781,7 +2781,7 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 										{selectedSaleMode === "fixedPrice" && (
 											<div style={{padding: '1rem', borderRadius: '1rem', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(20, 184, 166, 0.1))', border: '1px solid rgba(16, 185, 129, 0.3)', display: 'flex', flexDirection: 'column', gap: '0.75rem', animation: 'slideDown 0.3s ease-out'}}>
 												<label style={{fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)'}}>
-													Your price (SEPOLIA):
+													Your price (ETH):
 												</label>
 												<input
 													value={salePrice}
@@ -2793,7 +2793,7 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 													style={{width: '100%', padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'white', fontSize: '0.875rem', outline: 'none'}}
 												/>
 												<p style={{fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', margin: '0.5rem 0 0 0'}}>
-													You will receive: {salePrice ? parseFloat(salePrice).toFixed(4) : "0"} SEPOLIA
+													You will receive: {salePrice ? parseFloat(salePrice).toFixed(4) : "0"} ETH
 												</p>
 
 												<label style={{fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginTop: '0.75rem'}}>
@@ -2976,7 +2976,7 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 
 						<div style={{padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto', flexGrow: 1}}>
 							<div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
-								<label style={{fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)'}}>Prix (SEPOLIA)</label>
+								<label style={{fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)'}}>Prix (ETH)</label>
 								<input
 									value={interestedPrice}
 									onChange={(e: any) => setInterestedPrice(e.target.value)}
@@ -3109,7 +3109,7 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 				<div className="lux-footer-content">
 					<div style={{fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
 						<div>
-							<span style={{fontWeight: 600, color: 'rgba(255,255,255,0.7)'}}>Numberz</span> • Built on Sepolia Testnet
+							<span style={{fontWeight: 600, color: 'rgba(255,255,255,0.7)'}}>Numberz</span> • Built on Base Mainnet
 						</div>
 						{currentChainId && (
 							<div 
