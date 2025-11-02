@@ -22,6 +22,13 @@ body {
   color-scheme: dark;
 }
 
+body.scroll-locked {
+  overflow: hidden !important;
+  height: 100vh;
+  position: fixed;
+  width: 100vw;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -486,12 +493,14 @@ html {
   z-index: 50;
   padding: 1rem;
   animation: fadeIn 0.2s ease-out;
+  overflow: hidden;
 }
 
 /* Modal Content */
 .lux-modal-content {
   width: 100%;
   max-width: 48rem;
+  max-height: 90vh;
   background: linear-gradient(to bottom, rgba(26, 31, 58, 0.95), rgba(15, 6, 23, 0.95));
   backdrop-filter: blur(32px);
   border-radius: 1.5rem;
@@ -499,6 +508,8 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
   animation: scaleIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Modal Header */

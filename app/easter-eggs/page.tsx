@@ -12,12 +12,12 @@ export default function EasterEggsPage() {
 			name: "Darius Coin",
 			type: "FREE",
 			typeColor: "#10b981",
-			trigger: "Cherche 'darius' dans la search bar et appuie sur Enter",
+			trigger: "Search for 'darius' in the search bar and press Enter",
 			reference: "League of Legends",
-			description: "L'homme au bras de gigantotitan! Darius, le puissant général noxien, conquérant et chef de guerre.",
-			culturalNote: "Référence au champion Darius, connu pour son ultimate dévastateur 'Couperet Noxien' qui réinitialise son cooldown à chaque élimination.",
-			tips: "Les amateurs de League of Legends vont adorer ce trésor!",
-			difficulty: "🟢 Facile"
+			description: "The man with the gigantotitan arm! Darius, the powerful Noxian general, conqueror and warlord.",
+			culturalNote: "Reference to the champion Darius, known for his devastating ultimate 'Noxian Guillotine' which resets its cooldown with each elimination.",
+			tips: "League of Legends fans will love this treasure!",
+			difficulty: "🟢 Easy"
 		},
 		{
 			id: "nyan",
@@ -25,12 +25,12 @@ export default function EasterEggsPage() {
 			name: "Nyan Cat Coin",
 			type: "FREE",
 			typeColor: "#10b981",
-			trigger: "Cherche 'nyan' dans la search bar et appuie sur Enter",
+			trigger: "Search for 'nyan' in the search bar and press Enter",
 			reference: "Internet Culture",
-			description: "Le chat arc-en-ciel légendaire! Nyan Cat est l'une des créatures les plus iconiques d'Internet.",
-			culturalNote: "Créé en 2011, Nyan Cat est devenu viral avec sa vidéo YouTube affichant un chat demi-pop-tart traversant l'espace avec un arc-en-ciel.",
-			tips: "Le plus ancien mème cat du web! Un incontournable pour les nostalgiques d'Internet des années 2010.",
-			difficulty: "🟢 Facile"
+			description: "The legendary rainbow cat! Nyan Cat is one of the most iconic creatures on the Internet.",
+			culturalNote: "Created in 2011, Nyan Cat went viral with its YouTube video showing a half-pop-tart cat traveling through space with a rainbow.",
+			tips: "The oldest cat meme on the web! A must-have for 2010s Internet nostalgia lovers.",
+			difficulty: "🟢 Easy"
 		},
 		{
 			id: "chroma",
@@ -38,12 +38,12 @@ export default function EasterEggsPage() {
 			name: "Chroma Coin",
 			type: "FREE",
 			typeColor: "#10b981",
-			trigger: "Clique 7 fois de suite sur le logo 'Numberz' en haut à gauche",
+			trigger: "Click 7 times in a row on the 'Numberz' logo in the top left",
 			reference: "Konami Code",
-			description: "Une pierre précieuse multicolore! Le Chroma Coin apparaît après une série de clics sur le logo.",
-			culturalNote: "Inspiré du concept du Konami Code (↑ ↑ ↓ ↓ ← → ← → B A), une séquence de boutons cachée dans les jeux Konami.",
-			tips: "Clic clic clic... Les easter eggs qui demandent de l'interaction sont souvent les plus satisfaisants!",
-			difficulty: "🟡 Moyen"
+			description: "A multicolored precious stone! The Chroma Coin appears after a series of clicks on the logo.",
+			culturalNote: "Inspired by the Konami Code concept (↑ ↑ ↓ ↓ ← → ← → B A), a hidden button sequence in Konami games.",
+			tips: "Click click click... Easter eggs that require interaction are often the most satisfying!",
+			difficulty: "🟡 Medium"
 		},
 			{
 			id: "wukong",
@@ -51,27 +51,27 @@ export default function EasterEggsPage() {
 			name: "Monkey King Coin",
 			type: "PREMIUM",
 			typeColor: "#f59e0b",
-			price: "0.05 BASE",
-			trigger: "Cherche 'wukong' dans la search bar et appuie sur Enter",
+			price: "0.05 SEPOLIA",
+			trigger: "Search for 'wukong' in the search bar and press Enter",
 			reference: "League of Legends",
-			description: "Le roi des singes! Wukong maître du combat martial, prêt à écraser ses ennemis avec son bâton magique.",
-			culturalNote: "Le personnage Wukong est inspiré du Roi Singe de la mythologie chinoise (Sun Wukong) de 'Le voyage vers l'Ouest'.",
-			tips: "Après déblocage, ce coin rare devient disponible à l'achat. Sécurise-le avant quelqu'un d'autre!",
-			difficulty: "🟢 Facile"
+			description: "The king of monkeys! Wukong master of martial arts, ready to crush his enemies with his magic staff.",
+			culturalNote: "The character Wukong is inspired by the Monkey King of Chinese mythology (Sun Wukong) from 'Journey to the West'.",
+			tips: "After unlocking, this rare coin becomes available for purchase. Secure it before someone else does!",
+			difficulty: "🟢 Easy"
 		},
-		{
+			{
 			id: "halflife",
 			symbol: "½",
 			name: "Half-Life Coin",
 			type: "PREMIUM",
 			typeColor: "#f59e0b",
-			price: "0.048 BASE",
-			trigger: "Cherche 'half-life' dans la search bar et appuie sur Enter",
+			price: "0.048 SEPOLIA",
+			trigger: "Search for 'half-life' in the search bar and press Enter",
 			reference: "Gaming",
-			description: "Half-Life 3 confirmed? Non, mais ce coin représente l'attente infinie de la communauté gaming.",
-			culturalNote: "Half-Life est une série de jeux de tir FPS culte créée par Valve. Le mystère autour de Half-Life 3 est devenu un mème.",
-			tips: "La fraction '½' représente parfaitement l'incomplétion de la série. Un mème pour les vrais gamers!",
-			difficulty: "🟢 Facile"
+			description: "Half-Life 3 confirmed? No, but this coin represents the infinite wait of the gaming community.",
+			culturalNote: "Half-Life is a cult classic FPS game series created by Valve. The mystery around Half-Life 3 has become a meme.",
+			tips: "The fraction '½' perfectly represents the incompleteness of the series. A meme for true gamers!",
+			difficulty: "🟢 Easy"
 		},
 		{
 			id: "meme",
@@ -79,13 +79,13 @@ export default function EasterEggsPage() {
 			name: "Meme Coin",
 			type: "PREMIUM",
 			typeColor: "#f59e0b",
-			price: "0.042 BASE",
-			trigger: "Cherche 'meme' dans la search bar et appuie sur Enter",
+			price: "0.042 SEPOLIA",
+			trigger: "Search for 'meme' in the search bar and press Enter",
 			reference: "Internet Culture",
-			description: "Incroyable! C'est le coin pour tous les amateurs de culture Internet.",
-			culturalNote: "Les mèmes sont au cœur de la culture Internet moderne. Ce coin célèbre tous les mèmes qui ont façonné le web.",
-			tips: "Comment appelle-t-on un coin mème? Un 'MémeToken'! 😄",
-			difficulty: "🟡 Moyen"
+			description: "Amazing! It's the coin for all Internet culture enthusiasts.",
+			culturalNote: "Memes are at the heart of modern Internet culture. This coin celebrates all the memes that have shaped the web.",
+			tips: "What do you call a meme coin? A 'MemeToken'! 😄",
+			difficulty: "🟡 Medium"
 		},
 		{
 			id: "secret",
@@ -93,46 +93,42 @@ export default function EasterEggsPage() {
 			name: "Secret Coin",
 			type: "PREMIUM",
 			typeColor: "#f59e0b",
-			price: "0.035 BASE",
-			trigger: "Appuie 10 fois consécutives sur le bouton 'Search' (ou utilise 10 recherches de suite)",
+			price: "0.035 SEPOLIA",
+			trigger: "Press the 'Search' button 10 times in a row (or perform 10 searches in a row)",
 			reference: "Mystery",
-			description: "Mystérieux! Ce coin représente le secret ultime caché dans l'application.",
-			culturalNote: "Les coins secrets sont une tradition dans le gaming et les applications web. Celui-ci récomparde la persévérance!",
-			tips: "Ce secret demande plus d'efforts que les autres. Qui trouvera le pattern caché?",
-			difficulty: "🔴 Difficile"
+			description: "Mysterious! This coin represents the ultimate secret hidden in the application.",
+			culturalNote: "Secret coins are a tradition in gaming and web applications. This one rewards perseverance!",
+			tips: "This secret requires more effort than the others. Who will find the hidden pattern?",
+			difficulty: "🔴 Hard"
 		}
 	];
 
 	return (
 		<div style={{minHeight: '100vh', background: 'linear-gradient(135deg, #070812 0%, #1a1a2e 100%)', color: 'white', fontFamily: 'Inter, sans-serif'}}>
 			{/* Header */}
-			<div style={{padding: '4rem 2rem 2rem', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
-				<h1 style={{fontSize: '3rem', fontWeight: 900, marginBottom: '1rem'}}>
-					🔮 Guide Complet des Easter Eggs
-				</h1>
-				<p style={{fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', maxWidth: '600px', margin: '0 auto'}}>
-					Découvrez tous les trésors cachés de Numberz. Trouvez les easter eggs, déverrouillez les coins secrets, et complétez votre collection!
-				</p>
-			</div>
-
-			<div style={{maxWidth: '1200px', margin: '0 auto', padding: '3rem 2rem'}}>
+		<div style={{padding: '4rem 2rem 2rem', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+			<h1 style={{fontSize: '3rem', fontWeight: 900, marginBottom: '1rem'}}>
+				🔮 Complete Guide to Easter Eggs
+			</h1>
+			<p style={{fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', maxWidth: '600px', margin: '0 auto'}}>
+				Discover all the hidden treasures of Numberz. Find easter eggs, unlock secret coins, and complete your collection!
+			</p>
+		</div>			<div style={{maxWidth: '1200px', margin: '0 auto', padding: '3rem 2rem'}}>
 				{/* Legend */}
-				<div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '3rem'}}>
-					<div style={{background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '1.5rem', borderRadius: '0.75rem'}}>
-						<div style={{fontSize: '1.5rem', marginBottom: '0.5rem'}}>🟢 FREE</div>
-						<p style={{color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem'}}>
-							Accordez directement à votre collection sans coût
-						</p>
-					</div>
-					<div style={{background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '1.5rem', borderRadius: '0.75rem'}}>
-						<div style={{fontSize: '1.5rem', marginBottom: '0.5rem'}}>🟠 PREMIUM</div>
-						<p style={{color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem'}}>
-							Disponible à l'achat après déblocage
-						</p>
-					</div>
+			<div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '3rem'}}>
+				<div style={{background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '1.5rem', borderRadius: '0.75rem'}}>
+					<div style={{fontSize: '1.5rem', marginBottom: '0.5rem'}}>🟢 FREE</div>
+					<p style={{color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem'}}>
+						Added directly to your collection at no cost
+					</p>
 				</div>
-
-				{/* Easter Eggs List */}
+				<div style={{background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '1.5rem', borderRadius: '0.75rem'}}>
+					<div style={{fontSize: '1.5rem', marginBottom: '0.5rem'}}>🟠 PREMIUM</div>
+					<p style={{color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem'}}>
+						Available for purchase after unlocking
+					</p>
+				</div>
+			</div>				{/* Easter Eggs List */}
 				<div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem'}}>
 					{easterEggs.map((egg) => (
 						<div
@@ -188,11 +184,11 @@ export default function EasterEggsPage() {
 							{/* Quick Stats */}
 							<div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1rem'}}>
 								<div style={{fontSize: '0.85rem'}}>
-									<span style={{color: 'rgba(255,255,255,0.5)'}}>Référence:</span>
+									<span style={{color: 'rgba(255,255,255,0.5)'}}>Reference:</span>
 									<div style={{fontWeight: 600, color: '#f472b6'}}>{egg.reference}</div>
 								</div>
 								<div style={{fontSize: '0.85rem'}}>
-									<span style={{color: 'rgba(255,255,255,0.5)'}}>Difficulté:</span>
+									<span style={{color: 'rgba(255,255,255,0.5)'}}>Difficulty:</span>
 									<div style={{fontWeight: 600}}>{egg.difficulty}</div>
 								</div>
 							</div>
@@ -207,7 +203,7 @@ export default function EasterEggsPage() {
 								<div style={{borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', animation: 'fadeIn 0.3s ease-out'}}>
 									<div style={{marginBottom: '1rem'}}>
 										<h4 style={{fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.5rem', color: '#fbbf24'}}>
-											📚 Note Culturelle
+											📚 Cultural Note
 										</h4>
 										<p style={{fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6}}>
 											{egg.culturalNote}
@@ -215,7 +211,7 @@ export default function EasterEggsPage() {
 									</div>
 									<div>
 										<h4 style={{fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.5rem', color: '#f472b6'}}>
-											💡 Conseils de Chasse aux Trésors
+											💡 Treasure Hunt Tips
 										</h4>
 										<p style={{fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6}}>
 											{egg.tips}
@@ -226,74 +222,73 @@ export default function EasterEggsPage() {
 
 							{/* Click hint */}
 							<div style={{fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '1rem', textAlign: 'center'}}>
-								{expandedEgg === egg.id ? '▲ Cliquer pour fermer' : '▼ Cliquer pour plus de détails'}
+								{expandedEgg === egg.id ? '▲ Click to close' : '▼ Click for more details'}
 							</div>
 						</div>
 					))}
 				</div>
 
-				{/* Strategy Section */}
-				<div style={{marginTop: '4rem', padding: '2rem', background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1))', border: '1px solid rgba(236, 72, 153, 0.3)', borderRadius: '0.75rem'}}>
-					<h2 style={{fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem'}}>🗺️ Stratégie de Chasse aux Trésors</h2>
-					
-					<div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem'}}>
-						<div>
-							<h3 style={{fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', color: '#f472b6'}}>
-								📍 Phase 1: Collection Gratuite
-							</h3>
-							<ul style={{fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8}}>
-								<li>✓ Débloque Darius, Nyan Cat et Chroma</li>
-								<li>✓ Ajoute-les à ta collection gratuitement</li>
-								<li>✓ Complète le trio "Free Exotic"</li>
-							</ul>
-						</div>
-						<div>
-							<h3 style={{fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', color: '#fbbf24'}}>
-								💎 Phase 2: Collection Premium
-							</h3>
-							<ul style={{fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8}}>
-								<li>✓ Débloque Wukong, Half-Life, Meme</li>
-								<li>✓ Achète-les avant que d'autres ne les collectent</li>
-								<li>✓ Gagne l'achievement "Exotic Collector"</li>
-							</ul>
-						</div>
-						<div>
-							<h3 style={{fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', color: '#10b981'}}>
-								🏆 Phase 3: Le Secret
-							</h3>
-							<ul style={{fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8}}>
-								<li>✓ Cherche le Secret Coin (le plus difficile!)</li>
-								<li>✓ Demande 10 interactions rapides</li>
-								<li>✓ Récompense ultime pour les explorateurs</li>
-							</ul>
-						</div>
+			{/* Strategy Section */}
+			<div style={{marginTop: '4rem', padding: '2rem', background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1))', border: '1px solid rgba(236, 72, 153, 0.3)', borderRadius: '0.75rem'}}>
+				<h2 style={{fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem'}}>🗺️ Treasure Hunt Strategy</h2>
+				
+				<div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem'}}>
+					<div>
+						<h3 style={{fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', color: '#f472b6'}}>
+							📍 Phase 1: Free Collection
+						</h3>
+						<ul style={{fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8}}>
+							<li>✓ Unlock Darius, Nyan Cat, and Chroma</li>
+							<li>✓ Add them to your collection for free</li>
+							<li>✓ Complete the "Free Exotic" trio</li>
+						</ul>
+					</div>
+					<div>
+						<h3 style={{fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', color: '#fbbf24'}}>
+							💎 Phase 2: Premium Collection
+						</h3>
+						<ul style={{fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8}}>
+							<li>✓ Unlock Wukong, Half-Life, Meme</li>
+							<li>✓ Buy them before others collect them</li>
+							<li>✓ Earn the "Exotic Collector" achievement</li>
+						</ul>
+					</div>
+					<div>
+						<h3 style={{fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', color: '#10b981'}}>
+							🏆 Phase 3: The Secret
+						</h3>
+						<ul style={{fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8}}>
+							<li>✓ Hunt for the Secret Coin (the hardest!)</li>
+							<li>✓ Requires 10 rapid interactions</li>
+							<li>✓ Ultimate reward for explorers</li>
+						</ul>
 					</div>
 				</div>
+			{/* Tips Section */}
+			<div style={{marginTop: '3rem', padding: '2rem', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.75rem'}}>
+				<h2 style={{fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem'}}>🔍 General Tips</h2>
+				<ul style={{fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 2, paddingLeft: '1.5rem'}}>
+					<li>• Easter eggs are best discovered by exploring the app naturally</li>
+					<li>• Some triggers require interaction (clicks, multiple entries)</li>
+					<li>• Free coins beautifully complement Legendary collections</li>
+					<li>• Premium coins are limited - buy them quickly to avoid missing out!</li>
+					<li>• Each discovery brings you closer to special achievements</li>
+					<li>• Cultural references enrich the treasure hunt experience</li>
+					<li>• Share your discoveries with the community!</li>
+				</ul>
+			</div>
+			</div>
 
-				{/* Tips Section */}
-				<div style={{marginTop: '3rem', padding: '2rem', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '0.75rem'}}>
-					<h2 style={{fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem'}}>🔍 Conseils Généraux</h2>
-					<ul style={{fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 2, paddingLeft: '1.5rem'}}>
-						<li>• Les easter eggs sont mieux découverts en explorant naturellement l'app</li>
-						<li>• Certains triggers demandent de l'interaction (clics, entrées multiples)</li>
-						<li>• Les coins gratuits complètent magnifiquement les collections Legendary</li>
-						<li>• Les coins premium sont limités - achète-les vite pour éviter de les manquer!</li>
-						<li>• Chaque découverte rapproche d'achievements spéciaux</li>
-						<li>• Les références culturelles enrichissent l'expérience de chasse</li>
-						<li>• Partage tes trouvailles avec la communauté!</li>
-					</ul>
-				</div>
-
-				{/* Fun Fact */}
-				<div style={{marginTop: '3rem', padding: '2rem', textAlign: 'center', background: 'rgba(255, 255, 255, 0.05)', border: '2px dashed rgba(255,255,255,0.2)', borderRadius: '0.75rem'}}>
-					<div style={{fontSize: '1.5rem', marginBottom: '1rem'}}>🌟</div>
-					<h3 style={{fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem'}}>
-						Fait Amusant
-					</h3>
-					<p style={{fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', maxWidth: '500px', margin: '0 auto', lineHeight: 1.8}}>
-						Chaque easter egg est une célébration de la culture Internet et du gaming. Ensemble, ils racontent l'histoire des mèmes et des références qui ont façonné le web. Bonne chasse aux trésors! 🏆
-					</p>
-				</div>
+			{/* Fun Fact */}
+			<div style={{marginTop: '3rem', padding: '2rem', textAlign: 'center', background: 'rgba(255, 255, 255, 0.05)', border: '2px dashed rgba(255,255,255,0.2)', borderRadius: '0.75rem'}}>
+				<div style={{fontSize: '1.5rem', marginBottom: '1rem'}}>🌟</div>
+				<h3 style={{fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem'}}>
+					Fun Fact
+				</h3>
+				<p style={{fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', maxWidth: '500px', margin: '0 auto', lineHeight: 1.8}}>
+					Each easter egg is a celebration of Internet culture and gaming. Together, they tell the story of the memes and references that have shaped the web. Happy treasure hunting! 🏆
+				</p>
+			</div>
 			</div>
 
 			{/* Back Button */}
@@ -319,7 +314,7 @@ export default function EasterEggsPage() {
 					(e.currentTarget as HTMLElement).style.borderColor = 'rgba(99, 102, 241, 0.4)';
 				}}
 				>
-					← Retour à la Collection
+					← Back to Collection
 				</a>
 			</div>
 		</div>
