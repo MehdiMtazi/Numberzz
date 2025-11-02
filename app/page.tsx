@@ -2,6 +2,7 @@
 // @ts-ignore - allow compilation when @types/react isn't resolved in the environment
 import { useEffect, useState, useRef, useCallback } from "react";
 import { sdk } from '@farcaster/miniapp-sdk';
+import { useSupabaseData } from '../lib/hooks/useSupabaseData';
 
 // Hook to prevent SSR/Client hydration errors
 
@@ -22,90 +23,6 @@ declare global {
 	}
 }
 
-// ============================================
-// CROSS-TAB SYNCHRONIZATION
-// ============================================
-type SyncMessage = {
-	type: "numbersUpdate" | "contractsUpdate" | "certsUpdate" | "interestedUpdate";
-	payload: any;
-};
-
-const useCrossTabSync = () => {
-	const channelRef = useRef<BroadcastChannel | null>(null);
-
-	useEffect(() => {
-		// Initialize BroadcastChannel for cross-tab synchronization
-		if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-			channelRef.current = new (window as any).BroadcastChannel("numberz_sync");
-
-			// Listen for messages from other tabs and save to localStorage
-			if (channelRef.current) {
-				channelRef.current.onmessage = (event: MessageEvent<SyncMessage>) => {
-					const { type, payload } = event.data;
-					if (type === "numbersUpdate") {
-						localStorage.setItem("numberz_numbers", JSON.stringify(payload));
-					} else if (type === "contractsUpdate") {
-						localStorage.setItem("numberz_contracts", JSON.stringify(payload));
-					} else if (type === "certsUpdate") {
-						localStorage.setItem("numberz_certs", JSON.stringify(payload));
-					} else if (type === "interestedUpdate") {
-						localStorage.setItem("numberz_interested", JSON.stringify(payload));
-					}
-				};
-			}
-		}
-
-		return () => {
-			if (channelRef.current) {
-				channelRef.current.close();
-			}
-		};
-	}, []);
-
-	const broadcastNumbers = (numbers: any[]) => {
-		if (channelRef.current) {
-			channelRef.current.postMessage({
-				type: "numbersUpdate",
-				payload: numbers,
-			});
-		}
-	};
-
-	const broadcastContracts = (contracts: any[]) => {
-		if (channelRef.current) {
-			channelRef.current.postMessage({
-				type: "contractsUpdate",
-				payload: contracts,
-			});
-		}
-	};
-
-	const broadcastCerts = (certs: any[]) => {
-		if (channelRef.current) {
-			channelRef.current.postMessage({
-				type: "certsUpdate",
-				payload: certs,
-			});
-		}
-	};
-
-	const broadcastInterested = (interested: Record<string, any[]>) => {
-		if (channelRef.current) {
-			channelRef.current.postMessage({
-				type: "interestedUpdate",
-				payload: interested,
-			});
-		}
-	};
-
-	return {
-		broadcastNumbers,
-		broadcastContracts,
-		broadcastCerts,
-		broadcastInterested,
-	};
-};
-
 export default function Home() {
 	useEffect(() => {
 		// Keep the call to the mini app SDK: some environments (dev browser
@@ -121,9 +38,6 @@ export default function Home() {
 	}, []);
 	// Prevent SSR/Client hydration errors
 	const hydrated = useHydrated();
-	
-	// Cross-tab synchronization
-	const sync = useCrossTabSync();
 
 	// Wallet & app state
 	const [account, setAccount] = useState<string | null>(null);
@@ -186,6 +100,39 @@ export default function Home() {
 	const [achievements, setAchievements] = useState<Achievement[]>([]);
 	const [showAchievementModal, setShowAchievementModal] = useState(false);
 	const [lastAchievement, setLastAchievement] = useState<Achievement | null>(null);
+
+	// Toast notifications for unlock/claim feedback
+	type ToastType = "success" | "info" | "warning" | "error";
+	type Toast = {
+		id: number;
+		title: string;
+		message: string;
+		type: ToastType;
+		timestamp: number;
+	};
+	const [toasts, setToasts] = useState<Toast[]>([]);
+
+	// Show toast notification
+	const showToast = (title: string, message: string, type: ToastType = "info") => {
+		const newToast: Toast = {
+			id: Date.now(),
+			title,
+			message,
+			type,
+			timestamp: Date.now(),
+		};
+		setToasts(prev => [...prev, newToast]);
+		
+		// Auto-remove after 5 seconds
+		setTimeout(() => {
+			setToasts(prev => prev.filter(t => t.id !== newToast.id));
+		}, 5000);
+	};
+
+	// Remove toast manually
+	const removeToast = (id: number) => {
+		setToasts(prev => prev.filter(t => t.id !== id));
+	};
 
 	// Determine rarity and price based on the number
 	const getNumberRarity = (num: number): { rarity: "Legendary" | "Rare" | "Uncommon" | "Common"; price: string } => {
@@ -293,125 +240,61 @@ export default function Home() {
 		...generateNaturals(2, 300),
 	];
 
-	// Initialize states with synchronized data or default values
-	const [numbers, setNumbers] = useState<NumItem[]>(() => {
-		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem("numberz_numbers");
-			if (saved) {
-				try {
-					const parsed = JSON.parse(saved);
-					// Vérifier que c'est un array valide
-					if (Array.isArray(parsed) && parsed.length > 0) {
-						return parsed;
-					}
-				} catch (e) {
-					console.error("Error parsing localStorage numbers:", e);
-					// Vider la clé corrompue
-					localStorage.removeItem("numberz_numbers");
-				}
-			}
-		}
-		return initialNumbers;
-	});
-	
-	// Synchroniser les changements de numbers vers les autres onglets ET localStorage
-	useEffect(() => {
-		if (numbers.length > 0) {
-			try {
-				localStorage.setItem("numberz_numbers", JSON.stringify(numbers));
-			sync.broadcastNumbers(numbers);
-		} catch (e) {
-			console.error("Error saving numbers:", e);
-			// If localStorage is full, clear cache and retry
-			try {
-				localStorage.clear();
-				localStorage.setItem("numberz_numbers", JSON.stringify(numbers));
-			} catch (e2) {
-				console.error("Unable to save even after clear:", e2);
-			}
-		}
-	}
-}, [numbers]);
+	// ====================================
+	// SUPABASE HOOK - Remplace localStorage
+	// ====================================
+	const {
+		numbers,
+		setNumbers,
+		saleContracts,
+		setSaleContracts,
+		certs,
+		setCerts,
+		interestedByWithPrice,
+		setInterestedByWithPrice,
+		loading: supabaseLoading,
+		error: supabaseError,
+		claimFreeEasterEgg,
+		unlockNumber,
+		saveNumber,
+		saveSaleContract,
+		saveCertificate,
+		saveInterestedBuyer,
+		removeInterestedBuyer,
+		deleteSaleContract,
+		clearAllData: clearAllDataSupabase,
+	} = useSupabaseData(initialNumbers);
 
 // New: selected item for detailed card (modal)
 const [selected, setSelected] = useState<NumItem | null>(null);
 
 // New: trade UI state
 const [tradeMode, setTradeMode] = useState(false);
-const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; numId: string; owner: string; txHash: string; issuedAt: string };
-	const [certs, setCerts] = useState<Cert[]>(() => {
-		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem("numberz_certs");
-			if (saved) {
-				try {
-					return JSON.parse(saved);
-				} catch (e) {
-					console.error("Error parsing localStorage certs:", e);
-				}
-			}
-		}
-		return [];
-	});
+const [tradeAddress, setTradeAddress] = useState("");
 
-	// Synchronize changes of certs to other tabs AND localStorage
-	useEffect(() => {
-		try {
-			localStorage.setItem("numberz_certs", JSON.stringify(certs));
-			sync.broadcastCerts(certs);
-		} catch (e) {
-			console.error("Error saving certs:", e);
-		}
-	}, [certs]);
-
-	// Types for sale smart contracts
+	// Types for sale smart contracts - déjà définis dans useSupabaseData mais on les garde ici pour compatibilité
 	type SaleContract = {
 		id: string;
 		numId: string;
 		seller: string;
-		mode: "buyOffer" | "fixedPrice"; // buyOffer = seller waits for offer, fixedPrice = price set by seller
-		priceEth?: string; // only for fixedPrice
-		buyOffers?: { buyer: string; priceEth: string; timestamp: number }[]; // received purchase offers
+		mode: "buyOffer" | "fixedPrice";
+		priceEth?: string;
+		buyOffers?: { buyer: string; priceEth: string; timestamp: number }[];
 		createdAt: number;
 		status: "active" | "pending" | "completed" | "cancelled";
-		acceptedOffer?: { buyer: string; priceEth: string; timestamp: number }; // for pending
-		comment?: string; // Optional comment from seller
+		acceptedOffer?: { buyer: string; priceEth: string; timestamp: number };
+		comment?: string;
 	};
+
+	type Cert = { id: string; numId: string; owner: string; txHash: string; issuedAt: string };
 
 	// Type for interested people with their prices
 	type InterestedBuyer = {
 		address: string;
 		priceEth: string;
 		timestamp: number;
-		comment?: string; // Optional comment from interested buyer
+		comment?: string;
 	};
-
-	const [saleContracts, setSaleContracts] = useState<SaleContract[]>(() => {
-		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem("numberz_contracts");
-			if (saved) {
-				try {
-					const parsed = JSON.parse(saved);
-					if (Array.isArray(parsed)) {
-						return parsed;
-					}
-				} catch (e) {
-					console.error("Error parsing localStorage contracts:", e);
-					localStorage.removeItem("numberz_contracts");
-				}
-			}
-		}
-		return [];
-	});
-
-	// Synchronize changes of saleContracts to other tabs AND localStorage
-	useEffect(() => {
-		try {
-			localStorage.setItem("numberz_contracts", JSON.stringify(saleContracts));
-			sync.broadcastContracts(saleContracts);
-		} catch (e) {
-			console.error("Error saving contracts:", e);
-		}
-	}, [saleContracts]);
 
 	const [selectedSaleMode, setSelectedSaleMode] = useState<"buyOffer" | "fixedPrice" | null>(null);
 	const [salePrice, setSalePrice] = useState<string>("");
@@ -430,35 +313,6 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 	
 	// State for sale comment
 	const [saleComment, setSaleComment] = useState<string>("");
-	
-	// Change from Map to Object for localStorage serialization
-	const [interestedByWithPrice, setInterestedByWithPrice] = useState<Record<string, InterestedBuyer[]>>(() => {
-		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem("numberz_interested");
-			if (saved) {
-				try {
-					const parsed = JSON.parse(saved);
-					if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-						return parsed;
-					}
-				} catch (e) {
-					console.error("Error parsing localStorage interested:", e);
-					localStorage.removeItem("numberz_interested");
-				}
-			}
-		}
-		return {};
-	});
-
-	// Synchronize changes of interestedByWithPrice to localStorage and other tabs
-	useEffect(() => {
-		try {
-			localStorage.setItem("numberz_interested", JSON.stringify(interestedByWithPrice));
-			sync.broadcastInterested(interestedByWithPrice);
-		} catch (e) {
-			console.error("Error saving interested:", e);
-		}
-	}, [interestedByWithPrice]);
 
 	// Prevent body scroll when popup is open
 	useEffect(() => {
@@ -539,21 +393,49 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 		};
 	}, [account]);
 
-	// Close modal with Escape
-	useEffect(() => {
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") setSelected(null);
-		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
-	}, []);
-
-	// Initialize achievements on mount
-	useEffect(() => {
-		if (achievements.length === 0) {
-			initializeAchievements();
+	// Wallet detection and installation URLs
+	const walletConfig = {
+		'MetaMask': {
+			icon: '🦊',
+			installUrl: 'https://metamask.io/download/',
+			detect: () => typeof window !== 'undefined' && typeof (window as any).ethereum !== 'undefined' && (window as any).ethereum?.isMetaMask
+		},
+		'WalletConnect': {
+			icon: '🌐',
+			installUrl: 'https://walletconnect.com/',
+			detect: () => true // WalletConnect is a protocol, always available
+		},
+		'Ledger': {
+			icon: '🔐',
+			installUrl: 'https://www.ledger.com/ledger-live',
+			detect: () => typeof window !== 'undefined' && typeof (window as any).ethereum !== 'undefined'
+		},
+		'Coinbase Wallet': {
+			icon: '◯',
+			installUrl: 'https://www.coinbase.com/wallet',
+			detect: () => typeof window !== 'undefined' && typeof (window as any).ethereum !== 'undefined' && (window as any).ethereum?.isCoinbaseWallet
+		},
+		'Rainbow': {
+			icon: '🌈',
+			installUrl: 'https://rainbow.me/',
+			detect: () => typeof window !== 'undefined' && typeof (window as any).ethereum !== 'undefined' && (window as any).ethereum?.isRainbow
 		}
-	}, []);
+	};
+
+	// Handle wallet button click - detect or redirect
+	const handleWalletClick = (walletName: string) => {
+		const wallet = walletConfig[walletName as keyof typeof walletConfig];
+		if (!wallet) return;
+
+		if (wallet.detect()) {
+			// Wallet is installed, proceed with connection
+			setShowWalletModal(false);
+			connectWallet();
+		} else {
+			// Wallet not installed, redirect to installation page
+			window.open(wallet.installUrl, '_blank');
+		}
+	};
 
 	const connectWallet = async () => {
 		if (typeof window === "undefined") return;
@@ -652,7 +534,7 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 		localStorage.removeItem("walletConnected");
 	};
 
-	const clearAllData = () => {
+	const clearAllData = async () => {
 		// Vérifier que c'est le compte admin (banque)
 		if (account?.toLowerCase() !== bankWalletAddress.toLowerCase()) {
 			alert("❌ Only the administrator account (Bank) can delete data.");
@@ -679,45 +561,10 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 		}
 
 		try {
-			// Delete ALL data for ALL users
-			// 1. Main data
-			localStorage.removeItem("numberz_numbers");
-			localStorage.removeItem("numberz_contracts");
-			localStorage.removeItem("numberz_certs");
-			localStorage.removeItem("numberz_interested");
-			localStorage.removeItem("numberz_achievements");
+			// Utiliser la fonction Supabase pour tout supprimer
+			await clearAllDataSupabase();
 			
-			// 2. Delete ALL keys that contain user data
-			// (au cas où il y aurait des clés avec préfixes wallet-specific)
-			const allKeys = Object.keys(localStorage);
-			allKeys.forEach(key => {
-				if (key.startsWith("numberz_") || 
-				    key.includes("wallet") || 
-				    key.includes("0x") ||
-				    key.includes("number") ||
-				    key.includes("contract") ||
-				    key.includes("cert") ||
-				    key.includes("achievement")) {
-					localStorage.removeItem(key);
-				}
-			});
-			
-			// 3. Réinitialiser tous les états à leur valeur initiale
-			setNumbers(initialNumbers);
-			setSaleContracts([]);
-			setCerts([]);
-			setInterestedByWithPrice({});
-			setAchievements([]);
-			
-			// 4. Diffuser le reset à tous les onglets/fenêtres ouverts
-			const channel = new BroadcastChannel("numberz_sync");
-			channel.postMessage({ 
-				type: "GLOBAL_RESET",
-				timestamp: Date.now()
-			});
-			channel.close();
-			
-		console.log("🗑️ ALL data has been deleted by bank wallet");
+		console.log("🗑️ ALL data has been deleted by bank wallet from Supabase");
 		
 		alert("✅ All data has been PERMANENTLY deleted. The page will refresh.");
 		window.location.reload();
@@ -824,18 +671,36 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 			};
 			const txHash = await eth.request({ method: "eth_sendTransaction", params: [txParams] });
 			
-			// Immediate local update — in production wait for confirmation
+			// 🚀 OPTIMISTIC UPDATE: Mise à jour immédiate de l'UI
+			const updatedItem = { ...item, owner: account, forSale: false, salePrice: undefined };
 			setNumbers((prev: NumItem[]) => prev.map((n: NumItem) => 
-				(n.id === item.id ? { ...n, owner: account, forSale: false, salePrice: undefined } : n)
+				(n.id === item.id ? updatedItem : n)
 			));
 			
-			// Remove sale contract
+			// Sauvegarder dans Supabase en arrière-plan
+			saveNumber(updatedItem).catch(err => {
+				console.error('❌ Erreur sauvegarde Supabase:', err)
+				// L'UI reste optimiste, le realtime sync corrigera si nécessaire
+			});
+			
+			// Remove sale contract (optimistic)
 			if (item.forSale) {
+				const contractToDelete = saleContracts.find(c => c.numId === item.id);
 				setSaleContracts((prev: SaleContract[]) => prev.filter(c => c.numId !== item.id));
+				if (contractToDelete) {
+					deleteSaleContract(contractToDelete.id).catch(err => {
+						console.error('❌ Erreur suppression contrat:', err)
+					});
+				}
 			}
 			
+			// Create certificate (optimistic)
 			const cert: Cert = { id: `${item.id}-${Date.now()}`, numId: item.id, owner: account, txHash, issuedAt: new Date().toISOString() };
 			setCerts((c: Cert[]) => [cert, ...c]);
+			saveCertificate(cert).catch(err => {
+				console.error('❌ Erreur sauvegarde certificat:', err)
+			});
+			
 			alert(`✅ Purchase confirmed! (tx: ${txHash}). The number is now yours.`);
 		} catch (err: any) {
 			console.error(err);
@@ -870,14 +735,22 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 			comment: comment || undefined, // Store comment if provided
 		};
 
+		// 🚀 OPTIMISTIC UPDATE: Mise à jour immédiate de l'UI
 		setSaleContracts((prev: SaleContract[]) => [contract, ...prev]);
+		saveSaleContract(contract).catch(err => {
+			console.error('❌ Erreur sauvegarde contrat:', err)
+		});
 		
-		// Mark the number as "for sale" if fixedPrice
+		// Mark the number as "for sale" if fixedPrice (optimistic)
 		if (mode === "fixedPrice") {
+			const updatedItem = { ...item, forSale: true, salePrice: priceEth };
 			setNumbers((prev: NumItem[]) => prev.map((n: NumItem) => 
-				(n.id === item.id ? { ...n, forSale: true, salePrice: priceEth } : n)
+				(n.id === item.id ? updatedItem : n)
 			));
-										alert(`✅ ${item.label} is now on sale for ${priceEth} ETH!${comment ? ' (with a message)' : ''}`);
+			saveNumber(updatedItem).catch(err => {
+				console.error('❌ Erreur sauvegarde nombre:', err)
+			});
+			alert(`✅ ${item.label} is now on sale for ${priceEth} ETH!${comment ? ' (with a message)' : ''}`);
 		}
 		
 		setSelectedSaleMode(null);
@@ -900,15 +773,22 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 		if (!confirmed) return;
 
 		// Remove forSale status from the number
+		const updatedItem = { ...item, forSale: false, salePrice: undefined };
 		setNumbers((prev: NumItem[]) => prev.map((n: NumItem) => 
-			(n.id === item.id ? { ...n, forSale: false, salePrice: undefined } : n)
+			(n.id === item.id ? updatedItem : n)
 		));
+		// Sauvegarder dans Supabase
+		await saveNumber(updatedItem);
 
 		// Remove sale contract
+		const contractToDelete = saleContracts.find(c => c.numId === item.id);
+		if (contractToDelete) {
+			await deleteSaleContract(contractToDelete.id);
+		}
 		setSaleContracts((prev: SaleContract[]) => prev.filter(c => c.numId !== item.id));
 
 		alert(`✅ The sale of ${item.label} has been canceled!`);
-		setSelected({ ...item, forSale: false, salePrice: undefined });
+		setSelected(updatedItem);
 	};
 
 	// --- Accept a purchase offer or confirm the fixed sale
@@ -1040,7 +920,7 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 	};
 
 	// --- Add an interested person with price
-	const addInterestWithPrice = (numId: string, buyerAddress: string, priceEth: string, comment?: string) => {
+	const addInterestWithPrice = async (numId: string, buyerAddress: string, priceEth: string, comment?: string) => {
 		if (!priceEth || parseFloat(priceEth) <= 0) {
 			alert("Please enter a valid price.");
 			return;
@@ -1065,27 +945,34 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 
 		const newObj = { ...interestedByWithPrice, [numId]: currentList };
 		setInterestedByWithPrice(newObj);
+		
+		// 🚀 OPTIMISTIC UPDATE: Sauvegarde en arrière-plan
+		saveInterestedBuyer(numId, newBuyer).catch(err => {
+			console.error('❌ Erreur sauvegarde interested buyer:', err)
+		});
 
-		// Also update the NumItem for the counter
-		setNumbers((prev: NumItem[]) =>
-			prev.map((n: NumItem) => {
-				if (n.id === numId) {
-					const isAlreadyInterested = (n.interestedBy || []).includes(buyerAddress);
-					return {
-						...n,
-						interestedCount: isAlreadyInterested ? n.interestedCount : (n.interestedCount || 0) + 1,
-						interestedBy: isAlreadyInterested ? n.interestedBy : [...(n.interestedBy || []), buyerAddress],
-					};
-				}
-				return n;
-			})
-		);
+		// Also update the NumItem for the counter (optimistic)
+		const updatedNumber = numbers.find(n => n.id === numId);
+		if (updatedNumber) {
+			const isAlreadyInterested = (updatedNumber.interestedBy || []).includes(buyerAddress);
+			const updated = {
+				...updatedNumber,
+				interestedCount: isAlreadyInterested ? updatedNumber.interestedCount : (updatedNumber.interestedCount || 0) + 1,
+				interestedBy: isAlreadyInterested ? updatedNumber.interestedBy : [...(updatedNumber.interestedBy || []), buyerAddress],
+			};
+			setNumbers((prev: NumItem[]) =>
+				prev.map((n: NumItem) => n.id === numId ? updated : n)
+			);
+			saveNumber(updated).catch(err => {
+				console.error('❌ Erreur sauvegarde nombre:', err)
+			});
+		}
 
 		alert(`✅ You are interested at ${priceEth} ETH!${comment ? ' (with a comment)' : ''}`);
 	};
 
 	// --- Remove interest
-	const removeInterest = (numId: string, buyerAddress: string) => {
+	const removeInterest = async (numId: string, buyerAddress: string) => {
 		const currentList = interestedByWithPrice[numId] || [];
 		const filtered = currentList.filter((b: InterestedBuyer) => b.address.toLowerCase() !== buyerAddress.toLowerCase());
 
@@ -1096,19 +983,25 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 			newObj[numId] = filtered;
 		}
 		setInterestedByWithPrice(newObj);
+		
+		// 🚀 OPTIMISTIC UPDATE: Suppression en arrière-plan
+		removeInterestedBuyer(numId, buyerAddress).catch(err => {
+			console.error('❌ Erreur suppression interested buyer:', err)
+		});
 
-		setNumbers((prev: NumItem[]) =>
-			prev.map((n: NumItem) => {
-				if (n.id === numId) {
-					return {
-						...n,
-						interestedCount: Math.max(0, (n.interestedCount || 0) - 1),
-						interestedBy: (n.interestedBy || []).filter((addr: string) => addr.toLowerCase() !== buyerAddress.toLowerCase()),
-					};
-				}
-				return n;
-			})
-		);
+		const updatedNumber = numbers.find(n => n.id === numId);
+		if (updatedNumber) {
+			const updated = {
+				...updatedNumber,
+				interestedCount: Math.max(0, (updatedNumber.interestedCount || 0) - 1),
+				interestedBy: (updatedNumber.interestedBy || []).filter((addr: string) => addr.toLowerCase() !== buyerAddress.toLowerCase()),
+			};
+			setNumbers((prev: NumItem[]) =>
+				prev.map((n: NumItem) => n.id === numId ? updated : n)
+			);
+			// Sauvegarder dans Supabase
+			await saveNumber(updated);
+		}
 
 		alert(`❌ You are no longer interested.`);
 	};
@@ -1137,13 +1030,14 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 		if (!confirmed) return;
 
 		// Local update of ownership - the recipient becomes the new owner
+		const updatedItem = { ...item, owner: toAddress, interestedCount: 0, interestedBy: [] };
 		setNumbers((prev: NumItem[]) => 
 			prev.map((n: NumItem) => 
-				n.id === item.id 
-					? { ...n, owner: toAddress, interestedCount: 0, interestedBy: [] } 
-					: n
+				n.id === item.id ? updatedItem : n
 			)
 		);
+		// Sauvegarder dans Supabase
+		await saveNumber(updatedItem);
 
 		// Create transfer certification
 		const cert: Cert = { 
@@ -1154,6 +1048,8 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 			issuedAt: new Date().toISOString() 
 		};
 		setCerts((c: Cert[]) => [cert, ...c]);
+		// Sauvegarder dans Supabase
+		await saveCertificate(cert);
 
 		// Close the modal and transfer mode
 		setSelected(null);
@@ -1233,13 +1129,31 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 
 	// Generate status badge
 	const getOwnershipBadge = (item: NumItem) => {
+		// For easter eggs, show unlocked/locked state first
+		if (item.isEasterEgg) {
+			if (item.owner?.toLowerCase() === account?.toLowerCase()) {
+				return { label: "🎉 You Own", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.2)", icon: "🎉" };
+			}
+			if (item.owner) {
+				return { label: `Owned by ${item.owner.slice(0, 6)}...`, color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.2)", icon: "👤" };
+			}
+			if (item.unlocked && item.isFreeToClaim) {
+				return { label: "🔓 Unlocked (Free!)", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)", icon: "🎁" };
+			}
+			if (item.unlocked) {
+				return { label: "🔓 Unlocked", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)", icon: "🔓" };
+			}
+			return { label: "🔒 Locked", color: "#6b7280", bg: "rgba(107, 114, 128, 0.2)", icon: "🔒" };
+		}
+		
+		// Regular numbers
 		if (!item.owner) {
-			return { label: "Available", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)" };
+			return { label: "Available", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)", icon: "✨" };
 		}
 		if (item.owner.toLowerCase() === account?.toLowerCase()) {
-			return { label: "You Own", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.2)" };
+			return { label: "You Own", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.2)", icon: "👑" };
 		}
-		return { label: `Owned by ${item.owner.slice(0, 6)}...`, color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.2)" };
+		return { label: `Owned by ${item.owner.slice(0, 6)}...`, color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.2)", icon: "👤" };
 	};
 
 	// Easter egg detection and unlock
@@ -1262,24 +1176,28 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 	};
 
 	// --- NEW: stable tryUnlockByAction (useCallback) placed BEFORE effects that use it
-	const tryUnlockByAction = useCallback((eggId: string) => {
-		setNumbers(prev => {
-			return prev.map(n => {
-				if (n.id === eggId) {
-					// If already unlocked, do nothing
-					if (n.unlocked) return n;
-					// Unlock
-					const newItem = { ...n, unlocked: true };
-					// If free to claim and user connected => assign directly
-					if (newItem.isFreeToClaim && account) {
-						newItem.owner = account;
-					}
-					return newItem;
-				}
-				return n;
-			});
-		});
-	}, [account]);
+	const tryUnlockByAction = useCallback(async (eggId: string) => {
+		const current = numbers.find(n => n.id === eggId);
+		if (!current) return;
+		if (current.unlocked) return;
+
+		// Optimistic UI unlock
+		setNumbers(prev => prev.map(n => (n.id === eggId ? { ...n, unlocked: true } : n)));
+
+		if (current.isFreeToClaim && !current.owner && account) {
+			const res = await claimFreeEasterEgg(eggId, account);
+			if (res.ok) {
+				showToast("🎉 SECRET CLAIMED!", `You discovered and claimed ${current.label} for free!`, "success");
+			} else {
+				await unlockNumber(eggId);
+				showToast("🔍 Secret Found!", `${current.label} unlocked! (Already claimed by someone else)`, "info");
+			}
+			return;
+		}
+
+		await unlockNumber(eggId);
+		showToast("🔓 Secret Unlocked!", `${current.label} discovered and unlocked!`, "info");
+	}, [numbers, account, claimFreeEasterEgg, unlockNumber, setNumbers, showToast]);
 
 	// Effects to trigger unlocks based on counters
 	useEffect(() => {
@@ -1318,34 +1236,33 @@ const [tradeAddress, setTradeAddress] = useState("");	type Cert = { id: string; 
 
 
 	// Unlock easter egg
-	const unlockEasterEgg = (eggId: string) => {
-		let updated: NumItem[] = [];
-		setNumbers(prev => {
-			updated = prev.map(n => {
-				if (n.id === eggId && !n.owner) {
-					// If it's a free easter egg, add directly to My Numbers
-					if (n.isFreeToClaim) {
-					return { ...n, owner: account };
+	const unlockEasterEgg = async (eggId: string) => {
+		const current = numbers.find(n => n.id === eggId);
+		if (!current) return;
+
+		// Optimistic unlock in UI
+		setNumbers(prev => prev.map(n => (n.id === eggId ? { ...n, unlocked: true } : n)));
+
+		if (current.isFreeToClaim && !current.owner && account) {
+			const res = await claimFreeEasterEgg(eggId, account);
+			if (res.ok) {
+				showToast("🎉 FREE CLAIM SUCCESS!", `${current.label} has been added to your collection for free!`, "success");
+			} else {
+				await unlockNumber(eggId);
+				if (res.reason === 'already_claimed') {
+					showToast("🔓 Unlocked (Already Claimed)", `${current.label} was already claimed by someone else, but you've unlocked it for viewing. You can mark interest or buy if listed!`, "info");
+				} else {
+					showToast("🔓 Unlocked", `${current.label} is now visible in the collection!`, "info");
 				}
-				// Otherwise, just make it available (owner remains null, but it's now purchasable)
-				return n;
 			}
-			return n;
-		});
-		return updated;
-	});
+		} else {
+			await unlockNumber(eggId);
+			showToast("🔓 Unlocked!", `${current.label} is now available for purchase or to mark interest.`, "info");
+		}
 
-	// Display appropriate message
-	const eggItem = updated.find(n => n.id === eggId);
-	if (eggItem?.isFreeToClaim) {
-		alert("🎉 Easter egg found! It has been added to your collection!");
-	} else {
-		alert("🔓 Easter egg unlocked! It is now available for purchase in the collection");
-	}
-
-	// Check for achievements
-	checkAchievements(updated);
-};	// Initialize achievements
+		// Re-check achievements with current list
+		checkAchievements(numbers);
+	};	// Initialize achievements
 	const initializeAchievements = () => {
 		const defaultAchievements: Achievement[] = [
 			{ id: "first_egg", name: "🐣 Egg Hunter", description: "Unlock your first easter egg", icon: "🥚", unlocked: false },
@@ -1544,19 +1461,10 @@ e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
 <div>
 <h2 style={{color: 'white', fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem'}}>Connecter un portefeuille</h2>
 <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
-{[
-{ name: 'MetaMask', icon: '🦊' },
-{ name: 'WalletConnect', icon: '🌐' },
-{ name: 'Ledger', icon: '🔐' },
-{ name: 'Coinbase Wallet', icon: '◯' },
-{ name: 'Rainbow', icon: '🌈' }
-].map((wallet) => (
+{Object.entries(walletConfig).map(([name, config]) => (
 <button
-key={wallet.name}
-onClick={() => {
-setShowWalletModal(false);
-connectWallet();
-}}
+key={name}
+onClick={() => handleWalletClick(name)}
 style={{
 padding: '1rem',
 borderRadius: '0.75rem',
@@ -1581,8 +1489,8 @@ e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 }}
 >
-<span style={{fontSize: '1.5rem'}}>{wallet.icon}</span>
-{wallet.name}
+<span style={{fontSize: '1.5rem'}}>{config.icon}</span>
+{name}
 </button>
 ))}
 </div>
@@ -1638,6 +1546,75 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 
 	return (
 		<div className="lux-root">
+		{/* Toast Notifications Container */}
+		<div style={{position: 'fixed', top: '2rem', right: '2rem', zIndex: 10000, display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '420px'}}>
+			{toasts.map(toast => {
+				const colors = {
+					success: { bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.6)', icon: '✅' },
+					info: { bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.6)', icon: '🔓' },
+					warning: { bg: 'rgba(251, 191, 36, 0.15)', border: 'rgba(251, 191, 36, 0.6)', icon: '⚠️' },
+					error: { bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.6)', icon: '❌' },
+				};
+				const style = colors[toast.type];
+				
+				return (
+					<div 
+						key={toast.id}
+						style={{
+							background: style.bg,
+							border: `2px solid ${style.border}`,
+							borderRadius: '1rem',
+							padding: '1rem 1.25rem',
+							backdropFilter: 'blur(12px)',
+							boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+							animation: 'slideInRight 0.3s ease-out',
+							position: 'relative',
+							minWidth: '320px'
+						}}
+					>
+						<button 
+							onClick={() => removeToast(toast.id)}
+							style={{
+								position: 'absolute',
+								top: '0.75rem',
+								right: '0.75rem',
+								background: 'transparent',
+								border: 'none',
+								color: 'rgba(255,255,255,0.6)',
+								cursor: 'pointer',
+								fontSize: '1.25rem',
+								lineHeight: 1,
+								padding: 0,
+								width: '20px',
+								height: '20px',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								transition: 'color 0.2s'
+							}}
+							onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.9)'}
+							onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
+						>
+							×
+						</button>
+						<div style={{display: 'flex', alignItems: 'flex-start', gap: '0.75rem', paddingRight: '1.5rem'}}>
+							<div style={{fontSize: '1.5rem', lineHeight: 1, marginTop: '0.125rem'}}>
+								{style.icon}
+							</div>
+							<div style={{flex: 1}}>
+								<div style={{fontSize: '1rem', fontWeight: 700, color: 'white', marginBottom: '0.25rem'}}>
+									{toast.title}
+								</div>
+								<div style={{fontSize: '0.875rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.4}}>
+									{toast.message}
+								</div>
+							</div>
+						</div>
+					</div>
+				);
+			})}
+		</div>
+
 		{/* Achievement Modal */}
 		{showAchievementModal && lastAchievement && (
 			<div style={{position: 'fixed', top: '2rem', right: '2rem', zIndex: 9999, animation: 'slideIn 0.3s ease-out'}}>
@@ -2290,8 +2267,9 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 						<span style={{padding: '0.375rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)'}}>
 							{n.priceEth} ETH
 						</span>
-						<span style={{padding: '0.375rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, background: ownershipBadge.bg, color: ownershipBadge.color, border: `1px solid ${ownershipBadge.color}40`}}>
-							{ownershipBadge.label}
+						<span style={{padding: '0.375rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, background: ownershipBadge.bg, color: ownershipBadge.color, border: `1px solid ${ownershipBadge.color}40`, display: 'flex', alignItems: 'center', gap: '0.375rem'}}>
+							<span>{ownershipBadge.icon}</span>
+							<span>{ownershipBadge.label}</span>
 						</span>
 					</div>
 				</div>								{/* Interested Button & Counter */}
@@ -2395,19 +2373,10 @@ e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
 <div>
 <h2 style={{color: 'white', fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem'}}>Connecter un portefeuille</h2>
 <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
-{[
-{ name: 'MetaMask', icon: '🦊' },
-{ name: 'WalletConnect', icon: '🌐' },
-{ name: 'Ledger', icon: '🔐' },
-{ name: 'Coinbase Wallet', icon: '◯' },
-{ name: 'Rainbow', icon: '🌈' }
-].map((wallet) => (
+{Object.entries(walletConfig).map(([name, config]) => (
 <button
-key={wallet.name}
-onClick={() => {
-setShowWalletModal(false);
-connectWallet();
-}}
+key={name}
+onClick={() => handleWalletClick(name)}
 style={{
 padding: '1rem',
 borderRadius: '0.75rem',
@@ -2432,8 +2401,8 @@ e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 }}
 >
-<span style={{fontSize: '1.5rem'}}>{wallet.icon}</span>
-{wallet.name}
+<span style={{fontSize: '1.5rem'}}>{config.icon}</span>
+{name}
 </button>
 ))}
 </div>
@@ -3195,19 +3164,10 @@ e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
 <div>
 <h2 style={{color: 'white', fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem'}}>Connecter un portefeuille</h2>
 <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
-{[
-{ name: 'MetaMask', icon: '🦊' },
-{ name: 'WalletConnect', icon: '🌐' },
-{ name: 'Ledger', icon: '🔐' },
-{ name: 'Coinbase Wallet', icon: '◯' },
-{ name: 'Rainbow', icon: '🌈' }
-].map((wallet) => (
+{Object.entries(walletConfig).map(([name, config]) => (
 <button
-key={wallet.name}
-onClick={() => {
-setShowWalletModal(false);
-connectWallet();
-}}
+key={name}
+onClick={() => handleWalletClick(name)}
 style={{
 padding: '1rem',
 borderRadius: '0.75rem',
@@ -3232,8 +3192,8 @@ e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 }}
 >
-<span style={{fontSize: '1.5rem'}}>{wallet.icon}</span>
-{wallet.name}
+<span style={{fontSize: '1.5rem'}}>{config.icon}</span>
+{name}
 </button>
 ))}
 </div>
@@ -3282,6 +3242,30 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 				</div>
 			</div>
 		)}
+
+		{/* CSS Animations */}
+		<style>{`
+			@keyframes slideInRight {
+				from {
+					opacity: 0;
+					transform: translateX(100px);
+				}
+				to {
+					opacity: 1;
+					transform: translateX(0);
+				}
+			}
+			@keyframes slideIn {
+				from {
+					opacity: 0;
+					transform: translateY(-20px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+		`}</style>
 
 		</div>
 	);
