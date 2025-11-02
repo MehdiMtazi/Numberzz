@@ -1738,7 +1738,7 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 									if (e.key === "Enter" && account) {
 										const eggId = detectEasterEgg(query);
 										if (eggId) {
-											unlockEasterEgg(eggId);
+											tryUnlockByAction(eggId);
 											setQuery("");
 											setSearchOpen(false);
 										}
