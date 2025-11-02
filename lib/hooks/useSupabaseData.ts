@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { supabase, DbNumber, DbSaleContract, DbCertificate, DbInterestedBuyer } from '../supabase'
+import { supabase, DbNumber, DbSaleContract, DbCertificate, DbInterestedBuyer, isSupabaseConfigured } from '../supabase'
 
 // Types de l'application (correspondant à page.tsx)
 export type NumItem = {
@@ -148,6 +148,16 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
     try {
       setError(null)
 
+      // Skip Supabase calls if not configured (during build)
+      if (!isSupabaseConfigured()) {
+        console.warn('⚠️ Supabase not configured, using initial data only')
+        if (initialNumbersRef.current && initialNumbersRef.current.length > 0) {
+          setNumbersSafe(initialNumbersRef.current)
+        }
+        setLoading(false)
+        return
+      }
+
       // Charger les numbers
       const { data: numbersData, error: numbersError } = await supabase
         .from('numbers')
@@ -249,6 +259,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   // ====================================
   
   const initializeNumbers = useCallback(async (items: NumItem[]) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping initialization')
+      return
+    }
     try {
       if (!items || items.length === 0) return
       const dbNumbers = items.map(numItemToDbNumber)
@@ -275,6 +289,12 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
     // Initial load
     setLoading(true)
     loadAllData()
+
+    // Skip realtime subscriptions if Supabase not configured
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, realtime disabled')
+      return
+    }
 
     // 🚀 OPTIMISATION: Mise à jour incrémentale pour NUMBERS
     const numbersChannel = supabase
@@ -472,6 +492,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   // - Effet: SET owner=claimer, unlocked=true, is_free_to_claim=false WHERE id=numId AND owner IS NULL AND is_free_to_claim = true
   // - Retour: { ok: boolean, updated?: NumItem, reason?: 'already_claimed' | 'not_free' | 'not_found' | 'error' }
   const claimFreeEasterEgg = useCallback(async (numId: string, claimer: string): Promise<{ ok: boolean; updated?: NumItem; reason?: string }> => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured')
+      return { ok: false, reason: 'not_configured' }
+    }
     try {
       const now = new Date().toISOString()
       const { data, error } = await supabase
@@ -507,6 +531,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
 
   // Déverrouillage global (ne change pas l'owner)
   const unlockNumber = useCallback(async (numId: string): Promise<{ ok: boolean }> => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured')
+      return { ok: false }
+    }
     try {
       const now = new Date().toISOString()
       const { data, error } = await supabase
@@ -529,6 +557,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
 
   // Recalcule et synchronise le compteur d'intéressés pour un numéro
   const syncInterestedCount = useCallback(async (numId: string) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured')
+      return
+    }
     try {
       const { count, error } = await supabase
         .from('interested_buyers')
@@ -551,6 +583,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   }, [])
 
   const saveNumber = useCallback(async (number: NumItem) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping save')
+      return
+    }
     try {
       const dbNumber = numItemToDbNumber(number)
       const { error } = await supabase
@@ -568,6 +604,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   }, [])
 
   const saveSaleContract = useCallback(async (contract: SaleContract) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping save')
+      return
+    }
     try {
       const dbContract: Partial<DbSaleContract> = {
         id: contract.id,
@@ -594,6 +634,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   }, [])
 
   const saveCertificate = useCallback(async (cert: Cert) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping save')
+      return
+    }
     try {
       const dbCert: Partial<DbCertificate> = {
         id: cert.id,
@@ -617,6 +661,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   }, [])
 
   const saveInterestedBuyer = useCallback(async (numId: string, buyer: InterestedBuyer) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping save')
+      return
+    }
     try {
       const dbBuyer: Partial<DbInterestedBuyer> = {
         num_id: numId,
@@ -640,6 +688,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   }, [])
 
   const removeInterestedBuyer = useCallback(async (numId: string, address: string) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping delete')
+      return
+    }
     try {
       const { error } = await supabase
         .from('interested_buyers')
@@ -658,6 +710,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   }, [])
 
   const deleteSaleContract = useCallback(async (contractId: string) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping delete')
+      return
+    }
     try {
       const { error } = await supabase
         .from('sale_contracts')
@@ -679,6 +735,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   // ====================================
   
   const clearAllData = useCallback(async () => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping clear')
+      return
+    }
     try {
       // Supprimer toutes les données
       await supabase.from('interested_buyers').delete().neq('id', 0)
@@ -702,6 +762,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
   
   // 🚀 Sauvegarder plusieurs nombres en une seule requête
   const saveNumbersBatch = useCallback(async (numbers: NumItem[]) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping batch save')
+      return
+    }
     try {
       if (numbers.length === 0) return
       const dbNumbers = numbers.map(numItemToDbNumber)
@@ -722,6 +786,10 @@ export function useSupabaseData(initialNumbers: NumItem[]) {
 
   // 🚀 Sauvegarder plusieurs contrats en une seule requête
   const saveContractsBatch = useCallback(async (contracts: SaleContract[]) => {
+    if (!isSupabaseConfigured()) {
+      console.warn('⚠️ Supabase not configured, skipping batch save')
+      return
+    }
     try {
       if (contracts.length === 0) return
       const dbContracts = contracts.map(c => ({
