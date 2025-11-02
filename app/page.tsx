@@ -1181,22 +1181,54 @@ const [tradeAddress, setTradeAddress] = useState("");
 		if (!current) return;
 		if (current.unlocked) return;
 
-		// Optimistic UI unlock
-		setNumbers(prev => prev.map(n => (n.id === eggId ? { ...n, unlocked: true } : n)));
-
-		if (current.isFreeToClaim && !current.owner && account) {
-			const res = await claimFreeEasterEgg(eggId, account);
-			if (res.ok) {
-				showToast("🎉 SECRET CLAIMED!", `You discovered and claimed ${current.label} for free!`, "success");
-			} else {
-				await unlockNumber(eggId);
-				showToast("🔍 Secret Found!", `${current.label} unlocked! (Already claimed by someone else)`, "info");
-			}
+		if (!account) {
+			showToast("⚠️ Connect Wallet", "Please connect your wallet first", "warning");
 			return;
 		}
 
-		await unlockNumber(eggId);
-		showToast("🔓 Secret Unlocked!", `${current.label} discovered and unlocked!`, "info");
+		// Optimistic UI unlock
+		const optimisticItem = {
+			...current,
+			unlocked: true,
+			owner: current.isFreeToClaim && !current.owner ? account : current.owner,
+			isFreeToClaim: false,
+		};
+		setNumbers(prev => prev.map(n => (n.id === eggId ? optimisticItem : n)));
+
+		try {
+			if (current.isFreeToClaim && !current.owner) {
+				const res = await claimFreeEasterEgg(eggId, account);
+				
+				// Check if Supabase is not configured or returned null
+				if (!res) {
+					showToast("⚠️ Offline Mode", "Claimed locally only.", "warning");
+					return;
+				}
+
+				if (res.ok && res.updated) {
+					showToast("🎉 SECRET CLAIMED!", `You discovered and claimed ${current.label} for free!`, "success");
+					return;
+				}
+
+				// Already claimed by someone else
+				if (res.reason === 'already_claimed') {
+					const unlockedOnly = { ...current, unlocked: true };
+					setNumbers(prev => prev.map(n => (n.id === eggId ? unlockedOnly : n)));
+					
+					await unlockNumber(eggId);
+					showToast("🔍 Secret Found!", `${current.label} unlocked! (Already claimed by someone else)`, "info");
+					return;
+				}
+			}
+
+			await unlockNumber(eggId);
+			showToast("🔓 Secret Unlocked!", `${current.label} discovered and unlocked!`, "info");
+		} catch (err: any) {
+			console.error('❌ Action unlock error:', err);
+			// Rollback optimiste en cas d'erreur
+			setNumbers(prev => prev.map(n => (n.id === eggId ? current : n)));
+			showToast("❌ Error", "Failed to unlock. Please try again.", "error");
+		}
 	}, [numbers, account, claimFreeEasterEgg, unlockNumber, setNumbers, showToast]);
 
 	// Effects to trigger unlocks based on counters
@@ -1240,24 +1272,59 @@ const [tradeAddress, setTradeAddress] = useState("");
 		const current = numbers.find(n => n.id === eggId);
 		if (!current) return;
 
-		// Optimistic unlock in UI
-		setNumbers(prev => prev.map(n => (n.id === eggId ? { ...n, unlocked: true } : n)));
+		if (!account) {
+			showToast("⚠️ Connect Wallet", "Please connect your wallet to claim Easter eggs", "warning");
+			return;
+		}
 
-		if (current.isFreeToClaim && !current.owner && account) {
-			const res = await claimFreeEasterEgg(eggId, account);
-			if (res.ok) {
-				showToast("🎉 FREE CLAIM SUCCESS!", `${current.label} has been added to your collection for free!`, "success");
-			} else {
-				await unlockNumber(eggId);
+		// Optimistic unlock in UI
+		const optimisticItem = {
+			...current,
+			unlocked: true,
+			owner: current.isFreeToClaim && !current.owner ? account : current.owner,
+			isFreeToClaim: false,
+		};
+		setNumbers(prev => prev.map(n => (n.id === eggId ? optimisticItem : n)));
+
+		try {
+			if (current.isFreeToClaim && !current.owner) {
+				const res = await claimFreeEasterEgg(eggId, account);
+				
+				// Check if Supabase is not configured or returned null
+				if (!res) {
+					showToast("⚠️ Offline Mode", "Claimed locally only. Changes will sync when online.", "warning");
+					checkAchievements(numbers);
+					return;
+				}
+
+				if (res.ok && res.updated) {
+					// ✅ Claim réussi
+					showToast("🎉 FREE CLAIM SUCCESS!", `${current.label} has been added to your collection for free!`, "success");
+					checkAchievements(numbers);
+					return;
+				}
+
+				// ❌ Claim échoué (déjà pris)
 				if (res.reason === 'already_claimed') {
+					// Rollback de l'owner optimiste
+					const unlockedOnly = { ...current, unlocked: true };
+					setNumbers(prev => prev.map(n => (n.id === eggId ? unlockedOnly : n)));
+					
+					await unlockNumber(eggId);
 					showToast("🔓 Unlocked (Already Claimed)", `${current.label} was already claimed by someone else, but you've unlocked it for viewing. You can mark interest or buy if listed!`, "info");
-				} else {
-					showToast("🔓 Unlocked", `${current.label} is now visible in the collection!`, "info");
+					checkAchievements(numbers);
+					return;
 				}
 			}
-		} else {
+
+			// Sinon, juste unlock global
 			await unlockNumber(eggId);
 			showToast("🔓 Unlocked!", `${current.label} is now available for purchase or to mark interest.`, "info");
+		} catch (err: any) {
+			console.error('❌ Unlock/Claim error:', err);
+			// Rollback optimiste en cas d'erreur
+			setNumbers(prev => prev.map(n => (n.id === eggId ? current : n)));
+			showToast("❌ Error", err?.message || "Failed to unlock. Please try again.", "error");
 		}
 
 		// Re-check achievements with current list
