@@ -1131,18 +1131,23 @@ const [tradeAddress, setTradeAddress] = useState("");
 	const getOwnershipBadge = (item: NumItem) => {
 		// For easter eggs, show unlocked/locked state first
 		if (item.isEasterEgg) {
-			if (item.owner?.toLowerCase() === account?.toLowerCase()) {
+			// Check if user owns it (both must exist and match)
+			if (account && item.owner && item.owner.toLowerCase() === account.toLowerCase()) {
 				return { label: "🎉 You Own", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.2)", icon: "🎉" };
 			}
+			// Owned by someone else
 			if (item.owner) {
 				return { label: `Owned by ${item.owner.slice(0, 6)}...`, color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.2)", icon: "👤" };
 			}
+			// Unlocked and free to claim
 			if (item.unlocked && item.isFreeToClaim) {
 				return { label: "🔓 Unlocked (Free!)", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)", icon: "🎁" };
 			}
+			// Just unlocked
 			if (item.unlocked) {
 				return { label: "🔓 Unlocked", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)", icon: "🔓" };
 			}
+			// Locked (default)
 			return { label: "🔒 Locked", color: "#6b7280", bg: "rgba(107, 114, 128, 0.2)", icon: "🔒" };
 		}
 		
@@ -1150,7 +1155,8 @@ const [tradeAddress, setTradeAddress] = useState("");
 		if (!item.owner) {
 			return { label: "Available", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)", icon: "✨" };
 		}
-		if (item.owner.toLowerCase() === account?.toLowerCase()) {
+		// Check if user owns it (both must exist and match)
+		if (account && item.owner.toLowerCase() === account.toLowerCase()) {
 			return { label: "You Own", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.2)", icon: "👑" };
 		}
 		return { label: `Owned by ${item.owner.slice(0, 6)}...`, color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.2)", icon: "👤" };
@@ -1177,14 +1183,32 @@ const [tradeAddress, setTradeAddress] = useState("");
 
 	// --- NEW: stable tryUnlockByAction (useCallback) placed BEFORE effects that use it
 	const tryUnlockByAction = useCallback(async (eggId: string) => {
+		console.log('🔍 tryUnlockByAction called for:', eggId);
 		const current = numbers.find(n => n.id === eggId);
-		if (!current) return;
-		if (current.unlocked) return;
+		if (!current) {
+			console.log('❌ Easter egg not found:', eggId);
+			return;
+		}
+		
+		console.log('📦 Current state:', { 
+			id: current.id, 
+			unlocked: current.unlocked, 
+			owner: current.owner,
+			isFreeToClaim: current.isFreeToClaim 
+		});
+		
+		if (current.unlocked) {
+			console.log('ℹ️ Already unlocked, skipping');
+			return;
+		}
 
 		if (!account) {
+			console.log('⚠️ No account connected');
 			showToast("⚠️ Connect Wallet", "Please connect your wallet first", "warning");
 			return;
 		}
+
+		console.log('✅ Proceeding with unlock for account:', account);
 
 		// Optimistic UI unlock
 		const optimisticItem = {
@@ -1197,21 +1221,27 @@ const [tradeAddress, setTradeAddress] = useState("");
 
 		try {
 			if (current.isFreeToClaim && !current.owner) {
+				console.log('🎁 Attempting free claim...');
 				const res = await claimFreeEasterEgg(eggId, account);
+				
+				console.log('📡 Claim result:', res);
 				
 				// Check if Supabase is not configured or returned null
 				if (!res) {
+					console.log('⚠️ Supabase not configured');
 					showToast("⚠️ Offline Mode", "Claimed locally only.", "warning");
 					return;
 				}
 
 				if (res.ok && res.updated) {
+					console.log('🎉 Claim successful!');
 					showToast("🎉 SECRET CLAIMED!", `You discovered and claimed ${current.label} for free!`, "success");
 					return;
 				}
 
 				// Already claimed by someone else
 				if (res.reason === 'already_claimed') {
+					console.log('👤 Already claimed by someone else');
 					const unlockedOnly = { ...current, unlocked: true };
 					setNumbers(prev => prev.map(n => (n.id === eggId ? unlockedOnly : n)));
 					
@@ -1221,6 +1251,7 @@ const [tradeAddress, setTradeAddress] = useState("");
 				}
 			}
 
+			console.log('🔓 Unlocking number...');
 			await unlockNumber(eggId);
 			showToast("🔓 Secret Unlocked!", `${current.label} discovered and unlocked!`, "info");
 		} catch (err: any) {
@@ -1235,16 +1266,28 @@ const [tradeAddress, setTradeAddress] = useState("");
 	useEffect(() => {
 		// Chroma requires 7 logo clicks
 		if (logoClickCount >= 7) {
-			tryUnlockByAction("c_chroma");
+			const chromaEgg = numbers.find(n => n.id === "c_chroma");
+			// Only trigger if not already unlocked
+			if (chromaEgg && !chromaEgg.unlocked) {
+				tryUnlockByAction("c_chroma");
+			}
+			// Reset counter after attempt
+			setLogoClickCount(0);
 		}
-	}, [logoClickCount, tryUnlockByAction]);
+	}, [logoClickCount, tryUnlockByAction, numbers]);
 
 	useEffect(() => {
 		// Secret requires 10 search icon clicks
 		if (searchIconClickCount >= 10) {
-			tryUnlockByAction("s_secret");
+			const secretEgg = numbers.find(n => n.id === "s_secret");
+			// Only trigger if not already unlocked
+			if (secretEgg && !secretEgg.unlocked) {
+				tryUnlockByAction("s_secret");
+			}
+			// Reset counter after attempt
+			setSearchIconClickCount(0);
 		}
-	}, [searchIconClickCount, tryUnlockByAction]);
+	}, [searchIconClickCount, tryUnlockByAction, numbers]);
 
 	// Track scroll for floating button
 	useEffect(() => {
