@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS numbers (
   price_eth TEXT NOT NULL,
   owner TEXT,
   unlocked BOOLEAN DEFAULT false,
+  status TEXT CHECK (status IN ('locked', 'unlocked', 'available', 'owned')),
   description TEXT,
   for_sale BOOLEAN DEFAULT false,
   sale_price TEXT,

@@ -9,6 +9,7 @@ export type NumItem = {
   priceEth: string
   owner: string | null
   unlocked?: boolean
+  status?: 'locked' | 'unlocked' | 'available' | 'owned'
   description?: string
   forSale?: boolean
   salePrice?: string
@@ -56,6 +57,7 @@ function dbNumberToNumItem(db: DbNumber): NumItem {
     priceEth: db.price_eth,
     owner: db.owner,
     unlocked: db.unlocked,
+    status: db.status || undefined,
     description: db.description || undefined,
     forSale: db.for_sale,
     salePrice: db.sale_price || undefined,
@@ -76,6 +78,7 @@ function numItemToDbNumber(item: NumItem): Partial<DbNumber> {
     price_eth: item.priceEth,
     owner: item.owner,
     unlocked: item.unlocked || false,
+    status: item.status || null,
     description: item.description || null,
     for_sale: item.forSale || false,
     sale_price: item.salePrice || null,

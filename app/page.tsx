@@ -54,6 +54,7 @@ export default function Home() {
 		priceEth: string;
 		owner: string | null;
 		unlocked?: boolean; // pour les easter eggs: déverrouillé ou non
+		status?: "locked" | "unlocked" | "available" | "owned"; // Nouveau: statut simplifié pour Easter eggs
 		description?: string;
 		// Champs optionnels utilisés dans l'app
 		forSale?: boolean;
@@ -227,15 +228,15 @@ export default function Home() {
 
 		// === EXOTIC (EASTER EGGS) ===
 		// FREE TO CLAIM (directly in My Numbers)
-		{ id: "d_darius", label: "Ð", rarity: "Exotic", priceEth: "0", owner: null, unlocked: false, description: "🗡️ Darius Coin - The man with the gigantotitan arm! Found by searching 'darius'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "darius", isFreeToClaim: true },
-		{ id: "n_nyan", label: "🌈", rarity: "Exotic", priceEth: "0", owner: null, unlocked: false, description: "🐈 Nyan Cat Coin - The legendary rainbow cat! Found by searching 'nyan'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "nyan", isFreeToClaim: true },
-		{ id: "c_chroma", label: "◆", rarity: "Exotic", priceEth: "0", owner: null, unlocked: false, description: "🌈 Chroma Coin - Click the logo 7 times to get it!", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "chroma", isFreeToClaim: true },
+		{ id: "d_darius", label: "Ð", rarity: "Exotic", priceEth: "0", owner: null, unlocked: false, status: "locked", description: "🗡️ Darius Coin - The man with the gigantotitan arm! Found by searching 'darius'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "darius", isFreeToClaim: true },
+		{ id: "n_nyan", label: "🌈", rarity: "Exotic", priceEth: "0", owner: null, unlocked: false, status: "locked", description: "🐈 Nyan Cat Coin - The legendary rainbow cat! Found by searching 'nyan'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "nyan", isFreeToClaim: true },
+		{ id: "c_chroma", label: "◆", rarity: "Exotic", priceEth: "0", owner: null, unlocked: false, status: "locked", description: "🌈 Chroma Coin - Click the logo 7 times to get it!", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "chroma", isFreeToClaim: true },
 
 		// PREMIUM (Available for purchase after unlocking)
-		{ id: "w_wukong", label: "☯", rarity: "Exotic", priceEth: "0.05", owner: null, unlocked: false, description: "🐵 Monkey King Coin - The king of monkeys! Unlocked by searching 'wukong', now available for purchase", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "wukong", isFreeToClaim: false },
-		{ id: "h_halflife", label: "½", rarity: "Exotic", priceEth: "0.048", owner: null, unlocked: false, description: "🎮 Half-Life Coin - Half-Life 3 confirmed? Unlocked by searching 'half-life'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "half-life", isFreeToClaim: false },
-		{ id: "m_meme", label: "🎲", rarity: "Exotic", priceEth: "0.042", owner: null, unlocked: false, description: "Meme Coin - Amazing! Unlocked by searching 'meme'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "meme", isFreeToClaim: false },
-		{ id: "s_secret", label: "🔐", rarity: "Exotic", priceEth: "0.035", owner: null, unlocked: false, description: "Secret Coin - Mysterious! Unlocked by clicking the Search button 10 times", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "secret", isFreeToClaim: false },
+		{ id: "w_wukong", label: "☯", rarity: "Exotic", priceEth: "0.05", owner: null, unlocked: false, status: "locked", description: "🐵 Monkey King Coin - The king of monkeys! Unlocked by searching 'wukong', now available for purchase", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "wukong", isFreeToClaim: false },
+		{ id: "h_halflife", label: "½", rarity: "Exotic", priceEth: "0.048", owner: null, unlocked: false, status: "locked", description: "🎮 Half-Life Coin - Half-Life 3 confirmed? Unlocked by searching 'half-life'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "half-life", isFreeToClaim: false },
+		{ id: "m_meme", label: "🎲", rarity: "Exotic", priceEth: "0.042", owner: null, unlocked: false, status: "locked", description: "Meme Coin - Amazing! Unlocked by searching 'meme'", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "meme", isFreeToClaim: false },
+		{ id: "s_secret", label: "🔐", rarity: "Exotic", priceEth: "0.035", owner: null, unlocked: false, status: "locked", description: "Secret Coin - Mysterious! Unlocked by clicking the Search button 10 times", interestedCount: 0, interestedBy: [], isEasterEgg: true, easterEggName: "secret", isFreeToClaim: false },
 
 		...generateNaturals(2, 300),
 	];
@@ -1129,7 +1130,24 @@ const [tradeAddress, setTradeAddress] = useState("");
 
 	// Generate status badge
 	const getOwnershipBadge = (item: NumItem) => {
-		// For easter eggs, show unlocked/locked state first
+		// For easter eggs, use status field if available
+		if (item.isEasterEgg && item.status) {
+			switch (item.status) {
+				case "owned":
+					return { label: "🎉 You Own", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.2)", icon: "🎉" };
+				case "unlocked":
+					return item.isFreeToClaim 
+						? { label: "🔓 Unlocked (Free!)", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)", icon: "🎁" }
+						: { label: "🔓 Unlocked", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)", icon: "🔓" };
+				case "available":
+					return { label: "✨ Available", color: "#10b981", bg: "rgba(16, 185, 129, 0.2)", icon: "✨" };
+				case "locked":
+				default:
+					return { label: "🔒 Locked", color: "#6b7280", bg: "rgba(107, 114, 128, 0.2)", icon: "🔒" };
+			}
+		}
+		
+		// Fallback for easter eggs without status field (backward compatibility)
 		if (item.isEasterEgg) {
 			// Check if user owns it (both must exist and match)
 			if (account && item.owner && item.owner.toLowerCase() === account.toLowerCase()) {
@@ -1192,13 +1210,21 @@ const [tradeAddress, setTradeAddress] = useState("");
 		
 		console.log('📦 Current state:', { 
 			id: current.id, 
+			status: current.status,
 			unlocked: current.unlocked, 
 			owner: current.owner,
 			isFreeToClaim: current.isFreeToClaim 
 		});
 		
-		if (current.unlocked) {
-			console.log('ℹ️ Already unlocked, skipping');
+		// Check status field first if available
+		if (current.status === "owned" || current.status === "unlocked") {
+			console.log('ℹ️ Already unlocked or owned, skipping');
+			return;
+		}
+		
+		// Fallback: check unlocked field for backward compatibility
+		if (!current.status && current.unlocked) {
+			console.log('ℹ️ Already unlocked (legacy), skipping');
 			return;
 		}
 
@@ -1210,23 +1236,24 @@ const [tradeAddress, setTradeAddress] = useState("");
 
 		console.log('✅ Proceeding with unlock for account:', account);
 
-		// Optimistic UI unlock
-		const optimisticItem = {
-			...current,
-			unlocked: true,
-			owner: current.isFreeToClaim && !current.owner ? account : current.owner,
-			isFreeToClaim: false,
-		};
-		setNumbers(prev => prev.map(n => (n.id === eggId ? optimisticItem : n)));
-
 		try {
+			// Free Easter eggs: claim them directly for the user
 			if (current.isFreeToClaim && !current.owner) {
 				console.log('🎁 Attempting free claim...');
-				const res = await claimFreeEasterEgg(eggId, account);
 				
+				// Optimistic update to "owned"
+				const ownedItem = {
+					...current,
+					unlocked: true,
+					status: "owned" as const,
+					owner: account,
+					isFreeToClaim: false,
+				};
+				setNumbers(prev => prev.map(n => (n.id === eggId ? ownedItem : n)));
+				
+				const res = await claimFreeEasterEgg(eggId, account);
 				console.log('📡 Claim result:', res);
 				
-				// Check if Supabase is not configured or returned null
 				if (!res) {
 					console.log('⚠️ Supabase not configured');
 					showToast("⚠️ Offline Mode", "Claimed locally only.", "warning");
@@ -1242,8 +1269,8 @@ const [tradeAddress, setTradeAddress] = useState("");
 				// Already claimed by someone else
 				if (res.reason === 'already_claimed') {
 					console.log('👤 Already claimed by someone else');
-					const unlockedOnly = { ...current, unlocked: true };
-					setNumbers(prev => prev.map(n => (n.id === eggId ? unlockedOnly : n)));
+					const unlockedItem = { ...current, unlocked: true, status: "unlocked" as const };
+					setNumbers(prev => prev.map(n => (n.id === eggId ? unlockedItem : n)));
 					
 					await unlockNumber(eggId);
 					showToast("🔍 Secret Found!", `${current.label} unlocked! (Already claimed by someone else)`, "info");
@@ -1251,9 +1278,17 @@ const [tradeAddress, setTradeAddress] = useState("");
 				}
 			}
 
-			console.log('🔓 Unlocking number...');
+			// Premium Easter eggs: just unlock them (status = "available")
+			console.log('🔓 Unlocking premium easter egg...');
+			const unlockedItem = {
+				...current,
+				unlocked: true,
+				status: "available" as const,
+			};
+			setNumbers(prev => prev.map(n => (n.id === eggId ? unlockedItem : n)));
+			
 			await unlockNumber(eggId);
-			showToast("🔓 Secret Unlocked!", `${current.label} discovered and unlocked!`, "info");
+			showToast("🔓 Secret Unlocked!", `${current.label} discovered and now available for purchase!`, "info");
 		} catch (err: any) {
 			console.error('❌ Action unlock error:', err);
 			// Rollback optimiste en cas d'erreur
@@ -1320,20 +1355,21 @@ const [tradeAddress, setTradeAddress] = useState("");
 			return;
 		}
 
-		// Optimistic unlock in UI
-		const optimisticItem = {
-			...current,
-			unlocked: true,
-			owner: current.isFreeToClaim && !current.owner ? account : current.owner,
-			isFreeToClaim: false,
-		};
-		setNumbers(prev => prev.map(n => (n.id === eggId ? optimisticItem : n)));
-
 		try {
+			// Free Easter eggs: claim them directly
 			if (current.isFreeToClaim && !current.owner) {
+				// Optimistic update to "owned"
+				const ownedItem = {
+					...current,
+					unlocked: true,
+					status: "owned" as const,
+					owner: account,
+					isFreeToClaim: false,
+				};
+				setNumbers(prev => prev.map(n => (n.id === eggId ? ownedItem : n)));
+				
 				const res = await claimFreeEasterEgg(eggId, account);
 				
-				// Check if Supabase is not configured or returned null
 				if (!res) {
 					showToast("⚠️ Offline Mode", "Claimed locally only. Changes will sync when online.", "warning");
 					checkAchievements(numbers);
@@ -1341,16 +1377,13 @@ const [tradeAddress, setTradeAddress] = useState("");
 				}
 
 				if (res.ok && res.updated) {
-					// ✅ Claim réussi
 					showToast("🎉 FREE CLAIM SUCCESS!", `${current.label} has been added to your collection for free!`, "success");
 					checkAchievements(numbers);
 					return;
 				}
 
-				// ❌ Claim échoué (déjà pris)
 				if (res.reason === 'already_claimed') {
-					// Rollback de l'owner optimiste
-					const unlockedOnly = { ...current, unlocked: true };
+					const unlockedOnly = { ...current, unlocked: true, status: "unlocked" as const };
 					setNumbers(prev => prev.map(n => (n.id === eggId ? unlockedOnly : n)));
 					
 					await unlockNumber(eggId);
@@ -1360,17 +1393,22 @@ const [tradeAddress, setTradeAddress] = useState("");
 				}
 			}
 
-			// Sinon, juste unlock global
+			// Premium Easter eggs: unlock to "available" status
+			const unlockedItem = {
+				...current,
+				unlocked: true,
+				status: "available" as const,
+			};
+			setNumbers(prev => prev.map(n => (n.id === eggId ? unlockedItem : n)));
+			
 			await unlockNumber(eggId);
 			showToast("🔓 Unlocked!", `${current.label} is now available for purchase or to mark interest.`, "info");
 		} catch (err: any) {
 			console.error('❌ Unlock/Claim error:', err);
-			// Rollback optimiste en cas d'erreur
 			setNumbers(prev => prev.map(n => (n.id === eggId ? current : n)));
 			showToast("❌ Error", err?.message || "Failed to unlock. Please try again.", "error");
 		}
 
-		// Re-check achievements with current list
 		checkAchievements(numbers);
 	};	// Initialize achievements
 	const initializeAchievements = () => {
@@ -2232,16 +2270,18 @@ e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
 							{s === 'none' ? 'None' : s === 'priceAsc' ? 'Price ↑' : s === 'priceDesc' ? 'Price ↓' : s === 'rarity' ? 'Rarity' : 'Interested 📊'}
 						</button>
 					))}
+			</div>
+
+			{/* Message when no items on current page */}
+			{getPaginatedNumbers().length === 0 && (
+				<div style={{textAlign: 'center', padding: '2rem', color: '#f59e0b', fontSize: '0.875rem'}}>
+					{getFilteredAndSortedNumbers().length === 0 ? (
+						<>⚠️ No items match your current filter. Try changing filters or reset them.</>
+					) : (
+						<>⚠️ No items on this page. Total matching your filter: {getFilteredAndSortedNumbers().length}. Try navigating to other pages.</>
+					)}
 				</div>
-
-				{/* DEBUG: Show paginated numbers count */}
-				{getPaginatedNumbers().length === 0 && (
-					<div style={{textAlign: 'center', padding: '2rem', color: 'orange', fontSize: '0.875rem'}}>
-						⚠️ No items on this page. Total in filtered: {getFilteredAndSortedNumbers().length} | Infinity exists: {getFilteredAndSortedNumbers().some(n => n.id === "infinity") ? "✅ YES" : "❌ NO"}
-					</div>
-				)}
-
-				{getPaginatedNumbers()
+			)}				{getPaginatedNumbers()
 					.map((n: NumItem) => {
 						const isOwned = !!n.owner;
 						const glowColor = rarityStyle(n.rarity).glowColor;

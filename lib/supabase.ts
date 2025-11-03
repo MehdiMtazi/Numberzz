@@ -46,6 +46,7 @@ export type DbNumber = {
   price_eth: string
   owner: string | null
   unlocked: boolean
+  status: 'locked' | 'unlocked' | 'available' | 'owned' | null
   description: string | null
   for_sale: boolean
   sale_price: string | null
